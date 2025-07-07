@@ -1,6 +1,7 @@
 package doyoucompute
 
 import (
+	"strings"
 	"testing"
 )
 
@@ -17,9 +18,12 @@ func TestSectionRender(t *testing.T) {
 				Name: "INTRO",
 				Content: []Contenter{
 					FreeText("This is an introduction"),
+					Remote{
+						reader: strings.NewReader("hey im some remote content"),
+					},
 				},
 			},
-			expected: "# INTRO\n\nThis is an introduction",
+			expected: "# INTRO\n\nThis is an introduction\n\nhey im some remote content",
 		},
 	}
 
