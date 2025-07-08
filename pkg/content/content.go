@@ -17,7 +17,16 @@ func (h Header) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{}, nil
 }
 
-type Paragraph string
+type Text string
+
+func (t Text) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{}, nil
+}
+
+// A paragraph is a list of items that is materalized as a space delimited string.
+type Paragraph struct {
+	Chunks []Materializer
+}
 
 func (f Paragraph) Materialize() (MaterializedContent, error) {
 	// return string(f), nil

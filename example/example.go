@@ -17,7 +17,11 @@ func main() {
 	section := doyoucompute.Section{
 		Name: "Intro",
 		Content: []content.Materializer{
-			content.Paragraph("cool text bro"),
+			content.Paragraph{
+				Chunks: []content.Materializer{
+					content.Text("cool text bro"),
+				},
+			},
 			content.Remote{Reader: file},
 			content.Executable{
 				Shell: "sh",
