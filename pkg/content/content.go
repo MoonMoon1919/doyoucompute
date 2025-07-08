@@ -2,12 +2,7 @@ package content
 
 import (
 	"io"
-	"strings"
 )
-
-type Contenter interface {
-	Render() (string, error)
-}
 
 // Content mapped to markdown
 type Header struct {
@@ -15,44 +10,39 @@ type Header struct {
 	Level   int
 }
 
-func (h Header) Render() (string, error) { // Markdown specific..
-	headerLevel := strings.Repeat("#", h.Level)
+func (h Header) Materialize() (MaterializedContent, error) {
+	// headerLevel := strings.Repeat("#", h.Level)
+	// return headerLevel + " " + h.Content, nil
 
-	return headerLevel + " " + h.Content, nil
+	return MaterializedContent{}, nil
 }
 
 type Paragraph string
 
-func (f Paragraph) Render() (string, error) {
-	return string(f), nil
+func (f Paragraph) Materialize() (MaterializedContent, error) {
+	// return string(f), nil
+	return MaterializedContent{}, nil
 }
 
-type OrderedList struct {
-	items []string
+type List struct {
+	items   []string
+	ordered bool
 }
 
-func (l OrderedList) Render() (string, error) {
-	return "", nil
-}
-
-type UnorderedList struct {
-	items []string
-}
-
-func (l UnorderedList) Render() (string, error) {
-	return "", nil
+func (l List) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{}, nil
 }
 
 type Link string
 
-func (l Link) Render() (string, error) {
-	return "", nil
+func (l Link) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{}, nil
 }
 
 type Code string
 
-func (c Code) Render() (string, error) {
-	return "", nil
+func (c Code) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{}, nil
 }
 
 // A codeblock is a NON-EXECUTABLE block of code
@@ -62,18 +52,17 @@ type CodeBlock struct {
 	Cmd   []string
 }
 
-func (c CodeBlock) Render() (string, error) {
-	cmd := strings.Join(c.Cmd, " ")
-
-	leadingText := strings.Join([]string{"```", c.Shell}, "")
-
-	return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
+func (c CodeBlock) Materialize() (MaterializedContent, error) {
+	// cmd := strings.Join(c.Cmd, " ")
+	// leadingText := strings.Join([]string{"```", c.Shell}, "")
+	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
+	return MaterializedContent{}, nil
 }
 
 type BlockQuote string
 
-func (b BlockQuote) Render() (string, error) {
-	return "", nil
+func (b BlockQuote) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{}, nil
 }
 
 // Script running
@@ -83,12 +72,12 @@ type Executable struct {
 	Cmd   []string
 }
 
-func (c Executable) Render() (string, error) {
-	cmd := strings.Join(c.Cmd, " ")
+func (c Executable) Materialize() (MaterializedContent, error) {
+	// cmd := strings.Join(c.Cmd, " ")
+	// leadingText := strings.Join([]string{"```", c.Shell}, "")
+	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
 
-	leadingText := strings.Join([]string{"```", c.Shell}, "")
-
-	return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
+	return MaterializedContent{}, nil
 }
 
 // Content Sources
@@ -96,11 +85,12 @@ type Remote struct { // e.g., from local file in docs folder, from GitHub.. etc
 	Reader io.Reader
 }
 
-func (r Remote) Render() (string, error) {
-	content, err := io.ReadAll(r.Reader)
-	if err != nil {
-		return "", err
-	}
+func (r Remote) Materialize() (MaterializedContent, error) {
+	// content, err := io.ReadAll(r.Reader)
+	// if err != nil {
+	// 	return "", err
+	// }
 
-	return string(content), nil
+	// return string(content), nil
+	return MaterializedContent{}, nil
 }

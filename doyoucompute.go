@@ -16,23 +16,24 @@ Later, we can add a markdown formatter and script running formatter
 // A single section has a name and 1..N items of content
 type Section struct {
 	Name    string
-	Content []content.Contenter
+	Content []content.Materializer
 }
 
-func (i Section) Render() (string, error) {
-	var joinedString string
+func (i Section) Materialize() (content.MaterializedContent, error) {
+	// var joinedString string
 
-	name := content.Header{Content: i.Name, Level: 1}
-	nameStr, _ := name.Render()
-	joinedString = joinedString + nameStr
+	// name := content.Header{Content: i.Name, Level: 1}
+	// nameStr, _ := name.Render()
+	// joinedString = joinedString + nameStr
 
-	for _, item := range i.Content {
-		content, _ := item.Render()
+	// for _, item := range i.Content {
+	// 	content, _ := item.Render()
 
-		joinedString = joinedString + "\n\n" + content
-	}
+	// 	joinedString = joinedString + "\n\n" + content
+	// }
 
-	return joinedString, nil
+	// return joinedString, nil
+	return content.MaterializedContent{}, nil
 }
 
 // A document contains all the things

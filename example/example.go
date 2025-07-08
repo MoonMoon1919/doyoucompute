@@ -16,7 +16,7 @@ func main() {
 
 	section := doyoucompute.Section{
 		Name: "Intro",
-		Content: []content.Contenter{
+		Content: []content.Materializer{
 			content.Paragraph("cool text bro"),
 			content.Remote{Reader: file},
 			content.Executable{
@@ -26,7 +26,7 @@ func main() {
 		},
 	}
 
-	rendered, _ := section.Render()
+	rendered, _ := section.Materialize()
 
 	fmt.Print(rendered)
 }
