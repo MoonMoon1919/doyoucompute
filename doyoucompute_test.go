@@ -3,6 +3,8 @@ package doyoucompute
 import (
 	"strings"
 	"testing"
+
+	"github.com/MoonMoon1919/doyoucompute/pkg/content"
 )
 
 func TestSectionRender(t *testing.T) {
@@ -16,10 +18,10 @@ func TestSectionRender(t *testing.T) {
 			name: "Passing",
 			section: Section{
 				Name: "INTRO",
-				Content: []Contenter{
-					FreeText("This is an introduction"),
-					Remote{
-						reader: strings.NewReader("hey im some remote content"),
+				Content: []content.Contenter{
+					content.Paragraph("This is an introduction"),
+					content.Remote{
+						Reader: strings.NewReader("hey im some remote content"),
 					},
 				},
 			},
