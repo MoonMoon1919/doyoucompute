@@ -1,11 +1,10 @@
-package main
+package example
 
 import (
 	"fmt"
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
-	"github.com/MoonMoon1919/doyoucompute/pkg/content"
 )
 
 func main() {
@@ -16,21 +15,23 @@ func main() {
 
 	section := doyoucompute.Section{
 		Name: "Intro",
-		Content: []content.Materializer{
-			content.Paragraph{
-				Chunks: []content.Materializer{
-					content.Text("cool text bro"),
+		Content: []doyoucompute.Node{
+			doyoucompute.Paragraph{
+				Items: []doyoucompute.Node{
+					doyoucompute.Text("cool text bro"),
 				},
 			},
-			content.Remote{Reader: file},
-			content.Executable{
+			doyoucompute.Remote{Reader: file},
+			doyoucompute.Executable{
 				Shell: "sh",
 				Cmd:   []string{"echo", "hello", "world"},
 			},
 		},
 	}
 
-	rendered, _ := section.Materialize()
+	fmt.Print(section)
 
-	fmt.Print(rendered)
+	// rendered, _ := section.Materialize()
+
+	// fmt.Print(rendered)
 }

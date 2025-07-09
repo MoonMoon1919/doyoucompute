@@ -1,9 +1,5 @@
 package doyoucompute
 
-import (
-	"github.com/MoonMoon1919/doyoucompute/pkg/content"
-)
-
 /*
 This module contains the core domain logic for doyoucompute
 
@@ -13,31 +9,16 @@ rather than a string formatted as markdown.
 Later, we can add a markdown formatter and script running formatter
 */
 
-// A single section has a name and 1..N items of content
-type Section struct {
-	Name    string
-	Content []content.Materializer
+type Node interface {
+	Type() ContentType
 }
 
-func (i Section) Materialize() (content.MaterializedContent, error) {
-	// var joinedString string
-
-	// name := content.Header{Content: i.Name, Level: 1}
-	// nameStr, _ := name.Render()
-	// joinedString = joinedString + nameStr
-
-	// for _, item := range i.Content {
-	// 	content, _ := item.Render()
-
-	// 	joinedString = joinedString + "\n\n" + content
-	// }
-
-	// return joinedString, nil
-	return content.MaterializedContent{}, nil
+type Contenter interface {
+	Node
+	Materialize() (MaterializedContent, error)
 }
 
-// A document contains all the things
-type Document struct {
-	Name     string
-	Sections []Section
+type Structurer interface {
+	Node
+	Children() []Node
 }

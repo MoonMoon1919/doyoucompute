@@ -1,13 +1,38 @@
-package content
+package doyoucompute
 
 import (
 	"io"
 )
 
-// Content mapped to markdown
+type ContentType int
+
+const (
+	HeaderType ContentType = iota + 1
+	LinkType
+	TextType
+	CodeType
+	CodeBlockType
+	BlockQuoteType
+	ExecutableType
+	RemoteType
+	ListType
+	ParagraphType
+	SectionType
+	DocumentType
+)
+
+type MaterializedContent struct {
+	Type     ContentType
+	Metadata map[string]interface{}
+}
+
 type Header struct {
 	Content string
 	Level   int
+}
+
+func (h Header) Type() ContentType {
+	return HeaderType
 }
 
 func (h Header) Materialize() (MaterializedContent, error) {
@@ -19,36 +44,29 @@ func (h Header) Materialize() (MaterializedContent, error) {
 
 type Text string
 
+func (t Text) Type() ContentType {
+	return TextType
+}
+
 func (t Text) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{}, nil
 }
 
-// A paragraph is a list of items that is materalized as a space delimited string.
-type Paragraph struct {
-	Chunks []Materializer
-}
-
-func (f Paragraph) Materialize() (MaterializedContent, error) {
-	// return string(f), nil
-	return MaterializedContent{}, nil
-}
-
-type List struct {
-	items   []string
-	ordered bool
-}
-
-func (l List) Materialize() (MaterializedContent, error) {
-	return MaterializedContent{}, nil
-}
-
 type Link string
+
+func (t Link) Type() ContentType {
+	return LinkType
+}
 
 func (l Link) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{}, nil
 }
 
 type Code string
+
+func (c Code) Type() ContentType {
+	return CodeType
+}
 
 func (c Code) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{}, nil
@@ -61,6 +79,10 @@ type CodeBlock struct {
 	Cmd   []string
 }
 
+func (c CodeBlock) Type() ContentType {
+	return CodeBlockType
+}
+
 func (c CodeBlock) Materialize() (MaterializedContent, error) {
 	// cmd := strings.Join(c.Cmd, " ")
 	// leadingText := strings.Join([]string{"```", c.Shell}, "")
@@ -69,6 +91,10 @@ func (c CodeBlock) Materialize() (MaterializedContent, error) {
 }
 
 type BlockQuote string
+
+func (b BlockQuote) Type() ContentType {
+	return BlockQuoteType
+}
 
 func (b BlockQuote) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{}, nil
@@ -79,6 +105,10 @@ func (b BlockQuote) Materialize() (MaterializedContent, error) {
 type Executable struct {
 	Shell string
 	Cmd   []string
+}
+
+func (e Executable) Type() ContentType {
+	return ExecutableType
 }
 
 func (c Executable) Materialize() (MaterializedContent, error) {
@@ -92,6 +122,10 @@ func (c Executable) Materialize() (MaterializedContent, error) {
 // Content Sources
 type Remote struct { // e.g., from local file in docs folder, from GitHub.. etc
 	Reader io.Reader
+}
+
+func (r Remote) Type() ContentType {
+	return RemoteType
 }
 
 func (r Remote) Materialize() (MaterializedContent, error) {
