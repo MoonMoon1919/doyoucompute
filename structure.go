@@ -6,9 +6,7 @@ type List struct {
 	ordered bool
 }
 
-func (l List) Type() ContentType {
-	return ListType
-}
+func (l List) Type() ContentType { return ListType }
 
 func (l List) Children() []Node { return l.Items }
 
@@ -17,9 +15,7 @@ type Paragraph struct {
 	Items []Node
 }
 
-func (p Paragraph) Type() ContentType {
-	return ParagraphType
-}
+func (p Paragraph) Type() ContentType { return ParagraphType }
 
 func (p Paragraph) Children() []Node { return p.Items }
 
@@ -31,9 +27,7 @@ type Section struct {
 
 func (s Section) Children() []Node { return s.Content }
 
-func (s Section) Type() ContentType {
-	return SectionType
-}
+func (s Section) Type() ContentType { return SectionType }
 
 // A document contains many sections
 type Document struct {
@@ -41,6 +35,4 @@ type Document struct {
 	Sections []Section
 }
 
-func (d Document) Type() ContentType {
-	return DocumentType
-}
+func (d Document) Type() ContentType { return DocumentType }
