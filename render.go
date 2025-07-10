@@ -72,7 +72,23 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 	case HeaderType:
 		return m.renderHeader(contentNode.(Header))
 	case LinkType:
-		return "", nil
+		content, err := contentNode.Materialize()
+		if err != nil {
+			return "", err
+		}
+
+		url := content.Metadata["Url"].(string)
+
+		var builder strings.Builder
+
+		builder.WriteString("[")
+		builder.WriteString(content.Content)
+		builder.WriteString("]")
+		builder.WriteString("(")
+		builder.WriteString(url)
+		builder.WriteString(")")
+
+		return builder.String(), nil
 	case TextType:
 		content, err := contentNode.Materialize()
 		if err != nil {
@@ -81,11 +97,50 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 
 		return content.Content, nil
 	case CodeType:
-		return "", nil
+		content, err := contentNode.Materialize()
+		if err != nil {
+			return "", err
+		}
+
+		var builder strings.Builder
+
+		builder.WriteString("`")
+		builder.WriteString(content.Content)
+		builder.WriteString("`")
+
+		return builder.String(), nil
 	case CodeBlockType:
-		return "", nil
+		content, err := contentNode.Materialize()
+		if err != nil {
+			return "", err
+		}
+
+		shell := content.Metadata["BlockType"].(string)
+
+		var builder strings.Builder
+
+		builder.WriteString("```")
+		builder.WriteString(shell)
+		builder.WriteString("\n")
+		builder.WriteString(content.Content)
+		builder.WriteString("\n")
+		builder.WriteString("```")
+		builder.WriteString("\n\n")
+
+		return builder.String(), nil
 	case BlockQuoteType:
-		return "", nil
+		content, err := contentNode.Materialize()
+		if err != nil {
+			return "", err
+		}
+
+		var builder strings.Builder
+
+		builder.WriteString("> ")
+		builder.WriteString(content.Content)
+		builder.WriteString("\n\n")
+
+		return builder.String(), nil
 	case ExecutableType:
 		content, err := contentNode.Materialize()
 		if err != nil {
@@ -102,7 +157,7 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 		builder.WriteString(content.Content)
 		builder.WriteString("\n")
 		builder.WriteString("```")
-		builder.WriteString("\n")
+		builder.WriteString("\n\n")
 
 		return builder.String(), nil
 	case RemoteType:

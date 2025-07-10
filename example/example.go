@@ -19,12 +19,23 @@ func main() {
 			doyoucompute.Paragraph{
 				Items: []doyoucompute.Node{
 					doyoucompute.Text("cool text bro"),
+					doyoucompute.Code("very cool code"),
+					doyoucompute.Link{
+						Text: "Some Link",
+						Url:  "https://example.com",
+					},
 				},
 			},
+			doyoucompute.Header{Content: "Things", Level: 3},
+			doyoucompute.BlockQuote("Here i am blockin' on my own"),
 			doyoucompute.Remote{Reader: file},
 			doyoucompute.Executable{
 				Shell: "sh",
 				Cmd:   []string{"echo", "hello", "world"},
+			},
+			doyoucompute.CodeBlock{
+				BlockType: "json",
+				Cmd:       []string{`{"key": "value"}`},
 			},
 		},
 	}

@@ -57,15 +57,20 @@ func (t Text) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
-type Link string
+type Link struct {
+	Text string
+	Url  string
+}
 
 func (l Link) Type() ContentType { return LinkType }
 
 func (l Link) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:     LinkType,
-		Content:  string(l),
-		Metadata: map[string]interface{}{},
+		Type:    LinkType,
+		Content: l.Text,
+		Metadata: map[string]interface{}{
+			"Url": l.Url,
+		},
 	}, nil
 }
 
@@ -126,9 +131,6 @@ type Executable struct {
 func (e Executable) Type() ContentType { return ExecutableType }
 
 func (c Executable) Materialize() (MaterializedContent, error) {
-	// leadingText := strings.Join([]string{"```", c.Shell}, "")
-	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
-
 	return MaterializedContent{
 		Type:    ExecutableType,
 		Content: strings.Join(c.Cmd, " "),
