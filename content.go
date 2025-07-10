@@ -93,7 +93,6 @@ type CodeBlock struct {
 func (c CodeBlock) Type() ContentType { return CodeBlockType }
 
 func (c CodeBlock) Materialize() (MaterializedContent, error) {
-	// cmd := strings.Join(c.Cmd, " ")
 	// leadingText := strings.Join([]string{"```", c.Shell}, "")
 	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
 	return MaterializedContent{
@@ -127,7 +126,6 @@ type Executable struct {
 func (e Executable) Type() ContentType { return ExecutableType }
 
 func (c Executable) Materialize() (MaterializedContent, error) {
-	// cmd := strings.Join(c.Cmd, " ")
 	// leadingText := strings.Join([]string{"```", c.Shell}, "")
 	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
 

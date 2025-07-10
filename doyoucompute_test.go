@@ -5,48 +5,55 @@ import (
 	"testing"
 )
 
-func TestSectionRender(t *testing.T) {
+func TestMarkdownRender(t *testing.T) {
 	tests := []struct {
 		name         string
-		section      Section
+		renderer     Markdown
+		document     Document
 		errorMessage string
 		expected     string
 	}{
 		{
 			name: "Passing",
-			section: Section{
-				Name: "INTRO",
+			document: Document{
+				Name: "MyDoc",
 				Content: []Node{
-					Paragraph{
-						Items: []Node{
-							Text("This is an introduction"),
+					Section{
+						Name: "INTRO",
+						Content: []Node{
+							Paragraph{
+								Items: []Node{
+									Text("This is an introduction."),
+									Text("And another sentence here."),
+								},
+							},
+							Remote{
+								Reader: strings.NewReader("hey im some remote content"),
+							},
 						},
-					},
-					Remote{
-						Reader: strings.NewReader("hey im some remote content"),
 					},
 				},
 			},
-			expected: "# INTRO\n\nThis is an introduction\n\nhey im some remote content",
+			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here. \n\nhey im some remote content\n\n\n\n",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// _, err := tc.section.Materialize()
+			content, err := tc.renderer.Render(tc.document)
 
-			// var errMsg string
-			// if err != nil {
-			// 	errMsg = err.Error()
-			// }
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
 
-			// if errMsg != tc.errorMessage {
-			// 	t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
-			// }
+			if errMsg != tc.errorMessage {
+				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
+			}
 
-			// if content != tc.expected {
-			// 	t.Errorf("Expected content %s, got %s", tc.expected, content)
-			// }
+			if content != tc.expected {
+				t.Errorf("Expected content %s, got %s", tc.expected, content)
+			}
 		})
 	}
 }

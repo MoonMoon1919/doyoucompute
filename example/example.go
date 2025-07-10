@@ -1,4 +1,4 @@
-package example
+package main
 
 import (
 	"fmt"
@@ -29,9 +29,9 @@ func main() {
 		},
 	}
 
-	fmt.Print(section)
+	renderer := doyoucompute.Markdown{}
 
-	// rendered, _ := section.Materialize()
+	rendered, _ := renderer.Render(section)
 
-	// fmt.Print(rendered)
+	fmt.Print(rendered)
 }
