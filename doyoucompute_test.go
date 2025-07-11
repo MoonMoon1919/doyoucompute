@@ -34,7 +34,7 @@ func TestMarkdownRender(t *testing.T) {
 					},
 				},
 			},
-			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here. \n\nhey im some remote content\n",
+			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n",
 		},
 	}
 

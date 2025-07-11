@@ -2,7 +2,6 @@ package doyoucompute
 
 import (
 	"errors"
-	"log"
 	"strings"
 )
 
@@ -19,52 +18,66 @@ func (m Markdown) writeHeader(builder *strings.Builder, content string, level in
 	builder.WriteString("\n\n")
 }
 
-func (m Markdown) renderStructureNode(structureNode Structurer) (string, error) {
-	var documentContent strings.Builder
+func (m Markdown) renderChildren(children []Node) ([]string, error) {
+	results := make([]string, len(children))
 
-	if structureNode.Type() == DocumentType || structureNode.Type() == SectionType {
-		var headerLevel int
-		switch structureNode.Type() {
-		case DocumentType:
-			headerLevel = 1
-		case SectionType:
-			headerLevel = 2
-		}
-
-		m.writeHeader(&documentContent, structureNode.Identifer(), headerLevel)
-	}
-
-	// Iterate through each leaf and render it recursively
-	for _, leaf := range structureNode.Children() {
+	for idx, leaf := range children {
 		leafContent, err := m.Render(leaf)
 		if err != nil {
-			return "", err
+			return []string{}, err
 		}
 
-		documentContent.WriteString(leafContent)
-
-		if structureNode.Type() == ParagraphType {
-			documentContent.WriteString(" ")
-		}
-
+		results[idx] = leafContent
 	}
 
-	// Separate each section, paragraph, and list by a new line
-	// We don't need to append newlines at the end of the document
-	if structureNode.Type() == ParagraphType {
-		log.Print(structureNode.Type(), structureNode.Identifer())
-		documentContent.WriteString("\n\n")
-	}
-
-	return documentContent.String(), nil
+	return results, nil
 }
 
-func (m Markdown) renderHeader(header Header) (string, error) {
-	content, err := header.Materialize()
+func (m Markdown) renderParagraph(p Structurer) (string, error) {
+	childContent, err := m.renderChildren(p.Children())
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 
+	var builder strings.Builder
+
+	builder.WriteString(strings.Join(childContent, " "))
+	builder.WriteString("\n\n")
+
+	return builder.String(), nil
+}
+
+func (m Markdown) renderHeaderedPortion(s Structurer, headerLevel int) (string, error) {
+	childContent, err := m.renderChildren(s.Children())
+	if err != nil {
+		return "", err
+	}
+
+	var builder strings.Builder
+
+	m.writeHeader(&builder, s.Identifer(), headerLevel)
+	builder.WriteString(strings.Join(childContent, ""))
+
+	return builder.String(), nil
+}
+
+func (m Markdown) renderStructureNode(structureNode Structurer) (string, error) {
+	switch structureNode.Type() {
+	case DocumentType:
+		return m.renderHeaderedPortion(structureNode, 1)
+	case SectionType:
+		return m.renderHeaderedPortion(structureNode, 2)
+	case ParagraphType:
+		return m.renderParagraph(structureNode)
+	case ListType:
+		// TODO: Add support for List type here..
+		return "", errors.New("not implemented")
+	}
+
+	return "", errors.New("unhandled structure node type")
+}
+
+func (m Markdown) renderHeader(content MaterializedContent) (string, error) {
 	headerLevel := content.Metadata["Level"].(int)
 
 	var headerContent strings.Builder
@@ -74,12 +87,7 @@ func (m Markdown) renderHeader(header Header) (string, error) {
 	return headerContent.String(), nil
 }
 
-func (m Markdown) renderLink(link Link) (string, error) {
-	content, err := link.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderLink(content MaterializedContent) (string, error) {
 	url := content.Metadata["Url"].(string)
 
 	var builder strings.Builder
@@ -94,21 +102,11 @@ func (m Markdown) renderLink(link Link) (string, error) {
 	return builder.String(), nil
 }
 
-func (m Markdown) renderText(text Text) (string, error) {
-	content, err := text.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderText(content MaterializedContent) (string, error) {
 	return content.Content, nil
 }
 
-func (m Markdown) renderCode(code Code) (string, error) {
-	content, err := code.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderCode(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 
 	builder.WriteString("`")
@@ -128,12 +126,7 @@ func (m Markdown) renderBlockofCode(typeHint string, content string, builder *st
 	builder.WriteString("\n\n")
 }
 
-func (m Markdown) renderCodeBlock(codeBlock CodeBlock) (string, error) {
-	content, err := codeBlock.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderCodeBlock(content MaterializedContent) (string, error) {
 	shell := content.Metadata["BlockType"].(string)
 
 	var builder strings.Builder
@@ -143,12 +136,7 @@ func (m Markdown) renderCodeBlock(codeBlock CodeBlock) (string, error) {
 	return builder.String(), nil
 }
 
-func (m Markdown) renderBlockQuote(blockQuote BlockQuote) (string, error) {
-	content, err := blockQuote.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderBlockQuote(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 
 	builder.WriteString("> ")
@@ -158,12 +146,7 @@ func (m Markdown) renderBlockQuote(blockQuote BlockQuote) (string, error) {
 	return builder.String(), nil
 }
 
-func (m Markdown) renderExecutable(executable Executable) (string, error) {
-	content, err := executable.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderExecutable(content MaterializedContent) (string, error) {
 	shell := content.Metadata["Shell"].(string)
 
 	var builder strings.Builder
@@ -173,12 +156,7 @@ func (m Markdown) renderExecutable(executable Executable) (string, error) {
 	return builder.String(), nil
 }
 
-func (m Markdown) renderRemoteContent(remote Remote) (string, error) {
-	content, err := remote.Materialize()
-	if err != nil {
-		return "", err
-	}
-
+func (m Markdown) renderRemoteContent(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 	builder.WriteString(content.Content)
 	builder.WriteString("\n")
@@ -187,24 +165,28 @@ func (m Markdown) renderRemoteContent(remote Remote) (string, error) {
 }
 
 func (m Markdown) renderContent(contentNode Contenter) (string, error) {
+	content, err := contentNode.Materialize()
+	if err != nil {
+		return "", err
+	}
 
 	switch contentNode.Type() {
 	case HeaderType:
-		return m.renderHeader(contentNode.(Header))
+		return m.renderHeader(content)
 	case LinkType:
-		return m.renderLink(contentNode.(Link))
+		return m.renderLink(content)
 	case TextType:
-		return m.renderText(contentNode.(Text))
+		return m.renderText(content)
 	case CodeType:
-		return m.renderCode(contentNode.(Code))
+		return m.renderCode(content)
 	case CodeBlockType:
-		return m.renderCodeBlock(contentNode.(CodeBlock))
+		return m.renderCodeBlock(content)
 	case BlockQuoteType:
-		return m.renderBlockQuote(contentNode.(BlockQuote))
+		return m.renderBlockQuote(content)
 	case ExecutableType:
-		return m.renderExecutable(contentNode.(Executable))
+		return m.renderExecutable(content)
 	case RemoteType:
-		return m.renderRemoteContent(contentNode.(Remote))
+		return m.renderRemoteContent(content)
 	}
 
 	return "", errors.New("unknown content node type")
