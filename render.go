@@ -9,6 +9,7 @@ type Renderer[T any] interface {
 	Render(node Node) (T, error)
 }
 
+// MARK: Markdown
 type Markdown struct{}
 
 func (m Markdown) writeHeader(builder *strings.Builder, content string, level int) {
@@ -71,6 +72,9 @@ func (m Markdown) renderStructureNode(structureNode Structurer) (string, error) 
 		return m.renderParagraph(structureNode)
 	case ListType:
 		// TODO: Add support for List type here..
+		return "", errors.New("not implemented")
+	case TableType:
+		// TODO: Add support for table type here..
 		return "", errors.New("not implemented")
 	}
 
@@ -185,6 +189,8 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 		return m.renderBlockQuote(content)
 	case ExecutableType:
 		return m.renderExecutable(content)
+	case TableRowTable:
+		// TODO
 	case RemoteType:
 		return m.renderRemoteContent(content)
 	}
@@ -194,9 +200,136 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 
 func (m Markdown) Render(node Node) (string, error) {
 	switch node.Type() {
-	case DocumentType, SectionType, ParagraphType, ListType:
+	case DocumentType, SectionType, ParagraphType, ListType, TableType:
 		return m.renderStructureNode(node.(Structurer))
 	default: // let the content renderer check through an error for invalid type
 		return m.renderContent(node.(Contenter))
 	}
+}
+
+// MARK: Tracking
+type SectionInfo struct {
+	Name  string
+	Level int
+}
+
+type ContextPath []SectionInfo
+
+func (c ContextPath) Push(name string) ContextPath {
+	level := len(c) + 1
+	return append(c, SectionInfo{Name: name, Level: level})
+}
+
+func (c ContextPath) Current() SectionInfo {
+	if len(c) == 0 {
+		return SectionInfo{}
+	}
+
+	return c[len(c)-1]
+}
+
+func (c ContextPath) CurrentSection() string {
+	if len(c) == 0 {
+		return ""
+	}
+
+	return c.Current().Name
+}
+
+func (c ContextPath) CurrentLevel() int {
+	if len(c) == 0 {
+		return -1
+	}
+
+	return c.Current().Level
+}
+
+// MARK: Executor
+type CommandPlan struct {
+	Shell   string
+	Args    []string
+	Context SectionInfo
+}
+
+type ExecutionPlan struct {
+	Commands []CommandPlan
+}
+
+func (e ExecutionPlan) renderChildren(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
+	var commands []CommandPlan
+
+	for _, leaf := range node.Children() {
+		cmds, err := e.renderWithTracking(leaf, contextPath)
+		if err != nil {
+			return []CommandPlan{}, err
+		}
+
+		commands = append(commands, cmds...)
+	}
+
+	return commands, nil
+}
+
+func (e ExecutionPlan) renderStructureNode(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
+	ctxPath := contextPath.Push(node.Identifer())
+
+	return e.renderChildren(node, &ctxPath)
+}
+
+func (e ExecutionPlan) renderExecutable(content MaterializedContent, contextPath *ContextPath) (CommandPlan, error) {
+	shell := content.Metadata["Shell"].(string)
+	args := content.Metadata["Command"].([]string)
+
+	return CommandPlan{
+		Shell:   shell,
+		Args:    args,
+		Context: contextPath.Current(),
+	}, nil
+}
+
+func (e ExecutionPlan) renderWithTracking(node Node, contextPath *ContextPath) ([]CommandPlan, error) {
+	var commands []CommandPlan
+
+	switch node.Type() {
+	// Intentionally skip paragraphs and tables
+	// Lists _could_ have executables as items
+	case DocumentType, SectionType, ListType:
+		cmds, err := e.renderStructureNode(node.(Structurer), contextPath)
+		if err != nil {
+			return []CommandPlan{}, nil
+		}
+
+		commands = append(commands, cmds...)
+
+	// We only care to track executables for building execution plans
+	case ExecutableType:
+		content, err := node.(Contenter).Materialize()
+		if err != nil {
+			return []CommandPlan{}, err
+		}
+
+		cmd, err := e.renderExecutable(content, contextPath)
+		if err != nil {
+			return []CommandPlan{}, err
+		}
+
+		commands = append(commands, cmd)
+	}
+
+	return commands, nil
+}
+
+func (e *ExecutionPlan) Plan() []CommandPlan {
+	return e.Commands
+}
+
+func (e *ExecutionPlan) Render(node Node) (string, error) {
+	cmds, err := e.renderWithTracking(node, &ContextPath{})
+	if err != nil {
+		return "", err
+	}
+
+	e.Commands = append(e.Commands, cmds...)
+
+	return "", nil
 }

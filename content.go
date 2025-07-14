@@ -13,10 +13,12 @@ const (
 	TextType
 	CodeType
 	CodeBlockType
+	TableRowTable
 	BlockQuoteType
 	ExecutableType
 	RemoteType
 	ListType
+	TableType
 	ParagraphType
 	SectionType
 	DocumentType
@@ -137,6 +139,7 @@ func (c Executable) Materialize() (MaterializedContent, error) {
 		Metadata: map[string]interface{}{
 			"Shell":      c.Shell,
 			"Executable": true,
+			"Command":    c.Cmd,
 		},
 	}, nil
 }
