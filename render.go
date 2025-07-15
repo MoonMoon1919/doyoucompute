@@ -233,7 +233,7 @@ func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath)
 		return m.renderBlockQuote(content)
 	case ExecutableType:
 		return m.renderExecutable(content)
-	case TableRowTable:
+	case TableRowType:
 		// TODO
 	case RemoteType:
 		return m.renderRemoteContent(content)

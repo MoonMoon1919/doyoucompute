@@ -13,7 +13,7 @@ const (
 	TextType
 	CodeType
 	CodeBlockType
-	TableRowTable
+	TableRowType
 	BlockQuoteType
 	ExecutableType
 	RemoteType
@@ -39,7 +39,7 @@ func (h Header) Type() ContentType { return HeaderType }
 
 func (h Header) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:    HeaderType,
+		Type:    h.Type(),
 		Content: h.Content,
 		Metadata: map[string]interface{}{
 			"Level": h.Level,
@@ -53,7 +53,7 @@ func (t Text) Type() ContentType { return TextType }
 
 func (t Text) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:     TextType,
+		Type:     t.Type(),
 		Content:  string(t),
 		Metadata: map[string]interface{}{},
 	}, nil
@@ -68,7 +68,7 @@ func (l Link) Type() ContentType { return LinkType }
 
 func (l Link) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:    LinkType,
+		Type:    l.Type(),
 		Content: l.Text,
 		Metadata: map[string]interface{}{
 			"Url": l.Url,
@@ -84,7 +84,7 @@ func (c Code) Type() ContentType {
 
 func (c Code) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:     CodeType,
+		Type:     c.Type(),
 		Content:  string(c),
 		Metadata: map[string]interface{}{},
 	}, nil
@@ -103,7 +103,7 @@ func (c CodeBlock) Materialize() (MaterializedContent, error) {
 	// leadingText := strings.Join([]string{"```", c.Shell}, "")
 	// return strings.Join([]string{leadingText, cmd, "```"}, "\n"), nil
 	return MaterializedContent{
-		Type:    CodeBlockType,
+		Type:    c.Type(),
 		Content: strings.Join(c.Cmd, " "),
 		Metadata: map[string]interface{}{
 			"BlockType": c.BlockType,
@@ -117,7 +117,7 @@ func (b BlockQuote) Type() ContentType { return BlockQuoteType }
 
 func (b BlockQuote) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:     BlockQuoteType,
+		Type:     b.Type(),
 		Content:  string(b),
 		Metadata: map[string]interface{}{},
 	}, nil
@@ -132,14 +132,14 @@ type Executable struct {
 
 func (e Executable) Type() ContentType { return ExecutableType }
 
-func (c Executable) Materialize() (MaterializedContent, error) {
+func (e Executable) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:    ExecutableType,
-		Content: strings.Join(c.Cmd, " "),
+		Type:    e.Type(),
+		Content: strings.Join(e.Cmd, " "),
 		Metadata: map[string]interface{}{
-			"Shell":      c.Shell,
+			"Shell":      e.Shell,
 			"Executable": true,
-			"Command":    c.Cmd,
+			"Command":    e.Cmd,
 		},
 	}, nil
 }
@@ -158,8 +158,25 @@ func (r Remote) Materialize() (MaterializedContent, error) {
 	}
 
 	return MaterializedContent{
-		Type:     RemoteType,
+		Type:     r.Type(),
 		Content:  string(content),
 		Metadata: map[string]interface{}{},
+	}, nil
+}
+
+// TableRow
+type TableRow struct {
+	Values []string
+}
+
+func (t TableRow) Type() ContentType { return TableRowType }
+
+func (t TableRow) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{
+		Type:    t.Type(),
+		Content: "",
+		Metadata: map[string]interface{}{
+			"Items": t.Values,
+		},
 	}, nil
 }

@@ -1,5 +1,16 @@
 package doyoucompute
 
+type Table struct {
+	Headers []string
+	Items   []Node
+}
+
+func (t Table) Type() ContentType { return TableType }
+
+func (t Table) Children() []Node { return t.Items }
+
+func (t Table) Identifer() string { return "" }
+
 // A container that allows us to render content with list semantics (optionally ordered)
 type List struct {
 	Items   []Node
