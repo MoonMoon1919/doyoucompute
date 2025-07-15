@@ -32,18 +32,15 @@ type MaterializedContent struct {
 
 type Header struct {
 	Content string
-	Level   int
 }
 
 func (h Header) Type() ContentType { return HeaderType }
 
 func (h Header) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
-		Type:    h.Type(),
-		Content: h.Content,
-		Metadata: map[string]interface{}{
-			"Level": h.Level,
-		},
+		Type:     h.Type(),
+		Content:  h.Content,
+		Metadata: map[string]interface{}{},
 	}, nil
 }
 

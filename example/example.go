@@ -26,7 +26,7 @@ func main() {
 					},
 				},
 			},
-			doyoucompute.Header{Content: "Things", Level: 3},
+			doyoucompute.Header{Content: "Things"},
 			doyoucompute.BlockQuote("Here i am blockin' on my own"),
 			doyoucompute.Remote{Reader: file},
 			doyoucompute.Executable{
