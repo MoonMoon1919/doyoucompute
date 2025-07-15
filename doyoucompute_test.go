@@ -32,9 +32,34 @@ func TestMarkdownRender(t *testing.T) {
 							},
 						},
 					},
+					Section{
+						Name: "Quick Start",
+						Content: []Node{
+							Section{
+								Name: "Prerequisites",
+								Content: []Node{
+									Paragraph{
+										Items: []Node{
+											Text("Probably go"),
+										},
+									},
+								},
+							},
+						},
+					},
+					Section{
+						Name: "Long version",
+						Content: []Node{
+							Paragraph{
+								Items: []Node{
+									Text("very long version"),
+								},
+							},
+						},
+					},
 				},
 			},
-			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n",
+			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n## Quick Start\n\n### Prerequisites\n\nProbably go\n\n## Long version\n\nvery long version\n\n",
 		},
 	}
 
@@ -87,6 +112,16 @@ func TestExecutionPlanRender(t *testing.T) {
 								Shell: "bash",
 								Cmd:   []string{"echo", "hello", "world"},
 							},
+							Section{
+								Name: "Quick Start",
+								Content: []Node{
+									Text("Install dependencies"),
+									Executable{
+										Shell: "bash",
+										Cmd:   []string{"go", "get"},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -98,6 +133,14 @@ func TestExecutionPlanRender(t *testing.T) {
 					Context: SectionInfo{
 						Name:  "INTRO",
 						Level: 2,
+					},
+				},
+				{
+					Shell: "bash",
+					Args:  []string{"go", "get"},
+					Context: SectionInfo{
+						Name:  "Quick Start",
+						Level: 3,
 					},
 				},
 			},

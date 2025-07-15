@@ -9,6 +9,43 @@ type Renderer[T any] interface {
 	Render(node Node) (T, error)
 }
 
+// MARK: Tracking
+type SectionInfo struct {
+	Name  string
+	Level int
+}
+
+type ContextPath []SectionInfo
+
+func (c ContextPath) Push(name string) ContextPath {
+	level := len(c) + 1
+	return append(c, SectionInfo{Name: name, Level: level})
+}
+
+func (c ContextPath) Current() SectionInfo {
+	if len(c) == 0 {
+		return SectionInfo{}
+	}
+
+	return c[len(c)-1]
+}
+
+func (c ContextPath) CurrentSection() string {
+	if len(c) == 0 {
+		return ""
+	}
+
+	return c.Current().Name
+}
+
+func (c ContextPath) CurrentLevel() int {
+	if len(c) == 0 {
+		return -1
+	}
+
+	return c.Current().Level
+}
+
 // MARK: Markdown
 type Markdown struct{}
 
@@ -19,11 +56,11 @@ func (m Markdown) writeHeader(builder *strings.Builder, content string, level in
 	builder.WriteString("\n\n")
 }
 
-func (m Markdown) renderChildren(children []Node) ([]string, error) {
+func (m Markdown) renderChildren(children []Node, contextPath *ContextPath) ([]string, error) {
 	results := make([]string, len(children))
 
 	for idx, leaf := range children {
-		leafContent, err := m.Render(leaf)
+		leafContent, err := m.renderWithTracking(leaf, contextPath)
 		if err != nil {
 			return []string{}, err
 		}
@@ -34,8 +71,8 @@ func (m Markdown) renderChildren(children []Node) ([]string, error) {
 	return results, nil
 }
 
-func (m Markdown) renderParagraph(p Structurer) (string, error) {
-	childContent, err := m.renderChildren(p.Children())
+func (m Markdown) renderParagraph(p Structurer, contextPath *ContextPath) (string, error) {
+	childContent, err := m.renderChildren(p.Children(), contextPath)
 	if err != nil {
 		return "", err
 	}
@@ -48,28 +85,37 @@ func (m Markdown) renderParagraph(p Structurer) (string, error) {
 	return builder.String(), nil
 }
 
-func (m Markdown) renderHeaderedPortion(s Structurer, headerLevel int) (string, error) {
-	childContent, err := m.renderChildren(s.Children())
+func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) (string, error) {
+	ctxPath := contextPath.Push(s.Identifer())
+	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
+
+	childContent, err := m.renderChildren(s.Children(), contextPath)
 	if err != nil {
 		return "", err
 	}
 
 	var builder strings.Builder
 
-	m.writeHeader(&builder, s.Identifer(), headerLevel)
+	// Don't exceed an H5
+	level := ctxPath.CurrentLevel()
+	if ctxPath.CurrentLevel() > 5 {
+		level = 5
+	}
+
+	m.writeHeader(&builder, s.Identifer(), level)
 	builder.WriteString(strings.Join(childContent, ""))
 
 	return builder.String(), nil
 }
 
-func (m Markdown) renderStructureNode(structureNode Structurer) (string, error) {
+func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *ContextPath) (string, error) {
 	switch structureNode.Type() {
 	case DocumentType:
-		return m.renderHeaderedPortion(structureNode, 1)
+		return m.renderHeaderedPortion(structureNode, contextPath)
 	case SectionType:
-		return m.renderHeaderedPortion(structureNode, 2)
+		return m.renderHeaderedPortion(structureNode, contextPath)
 	case ParagraphType:
-		return m.renderParagraph(structureNode)
+		return m.renderParagraph(structureNode, contextPath)
 	case ListType:
 		// TODO: Add support for List type here..
 		return "", errors.New("not implemented")
@@ -81,12 +127,10 @@ func (m Markdown) renderStructureNode(structureNode Structurer) (string, error) 
 	return "", errors.New("unhandled structure node type")
 }
 
-func (m Markdown) renderHeader(content MaterializedContent) (string, error) {
-	headerLevel := content.Metadata["Level"].(int)
-
+func (m Markdown) renderHeader(content MaterializedContent, contextPath *ContextPath) (string, error) {
 	var headerContent strings.Builder
 
-	m.writeHeader(&headerContent, content.Content, headerLevel)
+	m.writeHeader(&headerContent, content.Content, contextPath.CurrentLevel())
 
 	return headerContent.String(), nil
 }
@@ -168,7 +212,7 @@ func (m Markdown) renderRemoteContent(content MaterializedContent) (string, erro
 	return builder.String(), nil
 }
 
-func (m Markdown) renderContent(contentNode Contenter) (string, error) {
+func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath) (string, error) {
 	content, err := contentNode.Materialize()
 	if err != nil {
 		return "", err
@@ -176,7 +220,7 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 
 	switch contentNode.Type() {
 	case HeaderType:
-		return m.renderHeader(content)
+		return m.renderHeader(content, contextPath)
 	case LinkType:
 		return m.renderLink(content)
 	case TextType:
@@ -198,50 +242,17 @@ func (m Markdown) renderContent(contentNode Contenter) (string, error) {
 	return "", errors.New("unknown content node type")
 }
 
-func (m Markdown) Render(node Node) (string, error) {
+func (m Markdown) renderWithTracking(node Node, contextPath *ContextPath) (string, error) {
 	switch node.Type() {
 	case DocumentType, SectionType, ParagraphType, ListType, TableType:
-		return m.renderStructureNode(node.(Structurer))
+		return m.renderStructureNode(node.(Structurer), contextPath)
 	default: // let the content renderer check through an error for invalid type
-		return m.renderContent(node.(Contenter))
+		return m.renderContent(node.(Contenter), contextPath)
 	}
 }
 
-// MARK: Tracking
-type SectionInfo struct {
-	Name  string
-	Level int
-}
-
-type ContextPath []SectionInfo
-
-func (c ContextPath) Push(name string) ContextPath {
-	level := len(c) + 1
-	return append(c, SectionInfo{Name: name, Level: level})
-}
-
-func (c ContextPath) Current() SectionInfo {
-	if len(c) == 0 {
-		return SectionInfo{}
-	}
-
-	return c[len(c)-1]
-}
-
-func (c ContextPath) CurrentSection() string {
-	if len(c) == 0 {
-		return ""
-	}
-
-	return c.Current().Name
-}
-
-func (c ContextPath) CurrentLevel() int {
-	if len(c) == 0 {
-		return -1
-	}
-
-	return c.Current().Level
+func (m Markdown) Render(node Node) (string, error) {
+	return m.renderWithTracking(node, &ContextPath{})
 }
 
 // MARK: Executor
@@ -261,7 +272,7 @@ func (e ExecutionPlan) renderChildren(node Structurer, contextPath *ContextPath)
 	for _, leaf := range node.Children() {
 		cmds, err := e.renderWithTracking(leaf, contextPath)
 		if err != nil {
-			return []CommandPlan{}, err
+			return make([]CommandPlan, 0), err
 		}
 
 		commands = append(commands, cmds...)
@@ -319,17 +330,13 @@ func (e ExecutionPlan) renderWithTracking(node Node, contextPath *ContextPath) (
 	return commands, nil
 }
 
-func (e *ExecutionPlan) Plan() []CommandPlan {
-	return e.Commands
-}
-
-func (e *ExecutionPlan) Render(node Node) (string, error) {
+func (e *ExecutionPlan) Render(node Node) ([]CommandPlan, error) {
 	cmds, err := e.renderWithTracking(node, &ContextPath{})
 	if err != nil {
-		return "", err
+		return make([]CommandPlan, 0), err
 	}
 
 	e.Commands = append(e.Commands, cmds...)
 
-	return "", nil
+	return e.Commands, nil
 }
