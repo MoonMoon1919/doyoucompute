@@ -108,6 +108,45 @@ func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) 
 	return builder.String(), nil
 }
 
+func (m Markdown) renderTable(t Table, contextPath *ContextPath) (string, error) {
+	var builder strings.Builder
+
+	joiner := strings.Join(t.Headers, " | ")
+
+	// Header row
+	builder.WriteString("| ")
+	builder.WriteString(joiner)
+	builder.WriteString(" |")
+	builder.WriteString("\n")
+
+	// Header row separator
+	numSeparators := len(t.Headers) - 1
+	numDividers := len(t.Headers)
+
+	builder.WriteString("| ")
+
+	for idx := range numDividers {
+		builder.WriteString("----")
+
+		if idx < numSeparators {
+			builder.WriteString(" | ")
+		}
+	}
+
+	builder.WriteString(" |")
+	builder.WriteString("\n")
+
+	// Children
+	childContent, err := m.renderChildren(t.Children(), contextPath)
+	if err != nil {
+		return "", err
+	}
+
+	builder.WriteString(strings.Join(childContent, ""))
+
+	return builder.String(), nil
+}
+
 func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *ContextPath) (string, error) {
 	switch structureNode.Type() {
 	case DocumentType:
@@ -120,8 +159,7 @@ func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *Con
 		// TODO: Add support for List type here..
 		return "", errors.New("not implemented")
 	case TableType:
-		// TODO: Add support for table type here..
-		return "", errors.New("not implemented")
+		return m.renderTable(structureNode.(Table), contextPath)
 	}
 
 	return "", errors.New("unhandled structure node type")
@@ -204,6 +242,20 @@ func (m Markdown) renderExecutable(content MaterializedContent) (string, error) 
 	return builder.String(), nil
 }
 
+func (m Markdown) renderTableRow(content MaterializedContent) (string, error) {
+	var builder strings.Builder
+
+	items := content.Metadata["Items"].([]string)
+	joiner := strings.Join(items, " | ")
+
+	builder.WriteString("| ")
+	builder.WriteString(joiner)
+	builder.WriteString(" |")
+	builder.WriteString("\n")
+
+	return builder.String(), nil
+}
+
 func (m Markdown) renderRemoteContent(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 	builder.WriteString(content.Content)
@@ -234,7 +286,7 @@ func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath)
 	case ExecutableType:
 		return m.renderExecutable(content)
 	case TableRowType:
-		// TODO
+		return m.renderTableRow(content)
 	case RemoteType:
 		return m.renderRemoteContent(content)
 	}

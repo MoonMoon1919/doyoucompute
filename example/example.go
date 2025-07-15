@@ -37,6 +37,14 @@ func main() {
 				BlockType: "json",
 				Cmd:       []string{`{"key": "value"}`},
 			},
+			doyoucompute.Table{
+				Headers: []string{"my", "cool", "table"},
+				Items: []doyoucompute.Node{
+					doyoucompute.TableRow{Values: []string{"some", "cool", "content"}},
+					doyoucompute.TableRow{Values: []string{"more", "nice", "stuff"}},
+					doyoucompute.TableRow{Values: []string{"very", "great", "table"}},
+				},
+			},
 		},
 	}
 
