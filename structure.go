@@ -2,7 +2,7 @@ package doyoucompute
 
 type Table struct {
 	Headers []string
-	Items   []Node
+	Items   []Node // being explicit about TableRowType here would be better but good for now
 }
 
 func (t Table) Type() ContentType { return TableType }
