@@ -59,7 +59,7 @@ func TestMarkdownRender(t *testing.T) {
 					},
 				},
 			},
-			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n## Quick Start\n\n### Prerequisites\n\nProbably go\n\n## Long version\n\nvery long version\n\n",
+			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n\n## Quick Start\n\n### Prerequisites\n\nProbably go\n\n## Long version\n\nvery long version",
 		},
 	}
 

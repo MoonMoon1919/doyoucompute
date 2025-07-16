@@ -45,6 +45,13 @@ func main() {
 					doyoucompute.TableRow{Values: []string{"very", "great", "table"}},
 				},
 			},
+			doyoucompute.List{
+				TypeOfList: doyoucompute.NUMBERED,
+				Items: []doyoucompute.Node{
+					doyoucompute.Text("first item"),
+					doyoucompute.Code("npm i"),
+				},
+			},
 		},
 	}
 

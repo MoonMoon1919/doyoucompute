@@ -80,7 +80,6 @@ func (m Markdown) renderParagraph(p Structurer, contextPath *ContextPath) (strin
 	var builder strings.Builder
 
 	builder.WriteString(strings.Join(childContent, " "))
-	builder.WriteString("\n\n")
 
 	return builder.String(), nil
 }
@@ -103,7 +102,7 @@ func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) 
 	}
 
 	m.writeHeader(&builder, s.Identifer(), level)
-	builder.WriteString(strings.Join(childContent, ""))
+	builder.WriteString(strings.Join(childContent, "\n\n"))
 
 	return builder.String(), nil
 }
@@ -142,7 +141,25 @@ func (m Markdown) renderTable(t Table, contextPath *ContextPath) (string, error)
 		return "", err
 	}
 
-	builder.WriteString(strings.Join(childContent, ""))
+	builder.WriteString(strings.Join(childContent, "\n"))
+
+	return builder.String(), nil
+}
+
+func (m Markdown) renderList(l List, contextPath *ContextPath) (string, error) {
+	var builder strings.Builder
+
+	childContent, err := m.renderChildren(l.Children(), contextPath)
+	if err != nil {
+		return "", err
+	}
+
+	for _, item := range childContent {
+		builder.WriteString(l.TypeOfList.Prefix())
+		builder.WriteString(" ")
+		builder.WriteString(item)
+		builder.WriteString("\n")
+	}
 
 	return builder.String(), nil
 }
@@ -156,8 +173,7 @@ func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *Con
 	case ParagraphType:
 		return m.renderParagraph(structureNode, contextPath)
 	case ListType:
-		// TODO: Add support for List type here..
-		return "", errors.New("not implemented")
+		return m.renderList(structureNode.(List), contextPath)
 	case TableType:
 		return m.renderTable(structureNode.(Table), contextPath)
 	}
@@ -209,7 +225,6 @@ func (m Markdown) renderBlockofCode(typeHint string, content string, builder *st
 	builder.WriteString(content)
 	builder.WriteString("\n")
 	builder.WriteString("```")
-	builder.WriteString("\n\n")
 }
 
 func (m Markdown) renderCodeBlock(content MaterializedContent) (string, error) {
@@ -227,7 +242,6 @@ func (m Markdown) renderBlockQuote(content MaterializedContent) (string, error) 
 
 	builder.WriteString("> ")
 	builder.WriteString(content.Content)
-	builder.WriteString("\n\n")
 
 	return builder.String(), nil
 }
@@ -251,7 +265,6 @@ func (m Markdown) renderTableRow(content MaterializedContent) (string, error) {
 	builder.WriteString("| ")
 	builder.WriteString(joiner)
 	builder.WriteString(" |")
-	builder.WriteString("\n")
 
 	return builder.String(), nil
 }
@@ -259,7 +272,6 @@ func (m Markdown) renderTableRow(content MaterializedContent) (string, error) {
 func (m Markdown) renderRemoteContent(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 	builder.WriteString(content.Content)
-	builder.WriteString("\n")
 
 	return builder.String(), nil
 }

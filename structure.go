@@ -12,9 +12,28 @@ func (t Table) Children() []Node { return t.Items }
 func (t Table) Identifer() string { return "" }
 
 // A container that allows us to render content with list semantics (optionally ordered)
+type ListTypeE int
+
+const (
+	BULLET ListTypeE = iota + 1
+	NUMBERED
+)
+
+func (l ListTypeE) Prefix() string {
+	switch l {
+	case BULLET:
+		return "-"
+	case NUMBERED:
+		return "1."
+	}
+
+	// Default to bulleted list
+	return "-"
+}
+
 type List struct {
-	Items   []Node
-	ordered bool
+	Items      []Node
+	TypeOfList ListTypeE
 }
 
 func (l List) Type() ContentType { return ListType }
