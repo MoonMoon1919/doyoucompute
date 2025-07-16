@@ -44,7 +44,7 @@ func (l List) Identifer() string { return "" }
 
 // A container that allows us to render content with paragraph semantics
 type Paragraph struct {
-	Items []Node
+	Items []Node // how can we only allow content types here so people don't do awkward things
 }
 
 func (p Paragraph) Type() ContentType { return ParagraphType }
@@ -52,6 +52,10 @@ func (p Paragraph) Type() ContentType { return ParagraphType }
 func (p Paragraph) Children() []Node { return p.Items }
 
 func (p Paragraph) Identifer() string { return "" }
+
+func (p Paragraph) Write(content Node) {
+	p.Items = append(p.Items, content)
+}
 
 // A single section has a name and 1..N items of content
 type Section struct {
@@ -65,6 +69,19 @@ func (s Section) Type() ContentType { return SectionType }
 
 func (s Section) Identifer() string { return s.Name }
 
+func (s Section) AddSection(section Section) {
+	// TODO: Ordering is important
+	s.Content = append(s.Content, section)
+}
+
+func (s Section) WriteSection(name string) *Section {
+	section := Section{Name: name}
+
+	s.Content = append(s.Content, &section)
+
+	return &section
+}
+
 // A document contains many sections
 type Document struct {
 	Name    string
@@ -76,3 +93,16 @@ func (d Document) Type() ContentType { return DocumentType }
 func (d Document) Children() []Node { return d.Content }
 
 func (d Document) Identifer() string { return d.Name }
+
+func (d Document) AddSection(section Section) {
+	// TODO: Ordering is important
+	d.Content = append(d.Content, section)
+}
+
+func (d Document) WriteSection(name string) *Section {
+	section := Section{Name: name}
+
+	d.Content = append(d.Content, &section)
+
+	return &section
+}
