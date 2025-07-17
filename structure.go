@@ -11,6 +11,10 @@ func (t Table) Children() []Node { return t.Items }
 
 func (t Table) Identifer() string { return "" }
 
+func (t *Table) AddRow(row Node) {
+	t.Items = append(t.Items, row)
+}
+
 // A container that allows us to render content with list semantics (optionally ordered)
 type ListTypeE int
 
