@@ -2,16 +2,24 @@ package doyoucompute
 
 type Table struct {
 	Headers []string
-	Items   []Node // being explicit about TableRowType here would be better but good for now
+	Items   []TableRow
 }
 
 func (t Table) Type() ContentType { return TableType }
 
-func (t Table) Children() []Node { return t.Items }
+func (t Table) Children() []Node {
+	nodes := make([]Node, len(t.Items))
+
+	for idx, row := range t.Items {
+		nodes[idx] = row
+	}
+
+	return nodes
+}
 
 func (t Table) Identifer() string { return "" }
 
-func (t *Table) AddRow(row Node) {
+func (t *Table) AddRow(row TableRow) {
 	t.Items = append(t.Items, row)
 }
 
@@ -36,7 +44,7 @@ func (l ListTypeE) Prefix() string {
 }
 
 type List struct {
-	Items      []Node
+	Items      []Node // Preferably Text, Link, Code
 	TypeOfList ListTypeE
 }
 
@@ -56,7 +64,7 @@ func (l *List) Append(item Node) {
 
 // A container that allows us to render content with paragraph semantics
 type Paragraph struct {
-	Items []Node // how can we only allow content types here so people don't do awkward things
+	Items []Node
 }
 
 func NewParagraph() *Paragraph {
@@ -71,15 +79,28 @@ func (p Paragraph) Children() []Node { return p.Items }
 
 func (p Paragraph) Identifer() string { return "" }
 
-func (p *Paragraph) Next(content Node) *Paragraph {
-	p.Items = append(p.Items, content)
+func (p *Paragraph) Text(val string) *Paragraph {
+	p.Items = append(p.Items, Text(val))
+
+	return p
+}
+
+func (p *Paragraph) Code(val string) *Paragraph {
+	p.Items = append(p.Items, Code(val))
+
+	return p
+}
+
+func (p *Paragraph) Link(text, url string) *Paragraph {
+	p.Items = append(p.Items, Link{Text: text, Url: url})
+
 	return p
 }
 
 // A single section has a name and 1..N items of content
 type Section struct {
 	Name    string
-	Content []Node
+	Content []Node // Preferably Paragraph, Table, List, Remote, CodeBlock, Executable, BlockQuote, etc
 }
 
 func NewSection(name string) Section {
@@ -107,16 +128,32 @@ func (s *Section) AddParagraph(paragraph Paragraph) {
 	s.Content = append(s.Content, paragraph)
 }
 
-func (s *Section) AddTable(headers []string, rows []Node) {
+func (s *Section) AddTable(headers []string, rows []TableRow) {
 	table := Table{Headers: headers, Items: rows}
 
 	s.Content = append(s.Content, table)
+}
+
+func (s *Section) NewTable(headers []string) *Table {
+	table := Table{Headers: headers, Items: make([]TableRow, 0)}
+
+	s.Content = append(s.Content, &table)
+
+	return &table
 }
 
 func (s *Section) AddList(listType ListTypeE, items []Node) {
 	list := List{TypeOfList: listType, Items: items}
 
 	s.Content = append(s.Content, list)
+}
+
+func (s *Section) NewList(listType ListTypeE) *List {
+	list := List{TypeOfList: listType}
+
+	s.Content = append(s.Content, &list)
+
+	return &list
 }
 
 func (s *Section) AddCodeBlock(blockType string, cmd []string, executable bool) {
@@ -141,14 +178,14 @@ func (s *Section) AddBlockQuote(value string) {
 	s.Content = append(s.Content, BlockQuote(value))
 }
 
-func (s *Section) AddRemoteContent(value Node) {
-	s.Content = append(s.Content, value)
+func (s *Section) AddRemoteContent(remote Remote) {
+	s.Content = append(s.Content, remote)
 }
 
 // A document contains many sections
 type Document struct {
 	Name    string
-	Content []Node
+	Content []Node // Preferably Paragraph and Section
 }
 
 func NewDocument(name string) Document {

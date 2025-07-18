@@ -107,7 +107,7 @@ func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) 
 	return builder.String(), nil
 }
 
-func (m Markdown) renderTable(t Table, contextPath *ContextPath) (string, error) {
+func (m Markdown) renderTable(t *Table, contextPath *ContextPath) (string, error) {
 	var builder strings.Builder
 
 	joiner := strings.Join(t.Headers, " | ")
@@ -146,7 +146,7 @@ func (m Markdown) renderTable(t Table, contextPath *ContextPath) (string, error)
 	return builder.String(), nil
 }
 
-func (m Markdown) renderList(l List, contextPath *ContextPath) (string, error) {
+func (m Markdown) renderList(l *List, contextPath *ContextPath) (string, error) {
 	var builder strings.Builder
 
 	childContent, err := m.renderChildren(l.Children(), contextPath)
@@ -173,9 +173,9 @@ func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *Con
 	case ParagraphType:
 		return m.renderParagraph(structureNode, contextPath)
 	case ListType:
-		return m.renderList(structureNode.(List), contextPath)
+		return m.renderList(structureNode.(*List), contextPath)
 	case TableType:
-		return m.renderTable(structureNode.(Table), contextPath)
+		return m.renderTable(structureNode.(*Table), contextPath)
 	}
 
 	return "", errors.New("unhandled structure node type")

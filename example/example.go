@@ -46,10 +46,10 @@ func manualRoute() doyoucompute.Document {
 					},
 					doyoucompute.Table{
 						Headers: []string{"my", "cool", "table"},
-						Items: []doyoucompute.Node{
-							doyoucompute.TableRow{Values: []string{"some", "cool", "content"}},
-							doyoucompute.TableRow{Values: []string{"more", "nice", "stuff"}},
-							doyoucompute.TableRow{Values: []string{"very", "great", "table"}},
+						Items: []doyoucompute.TableRow{
+							{Values: []string{"some", "cool", "content"}},
+							{Values: []string{"more", "nice", "stuff"}},
+							{Values: []string{"very", "great", "table"}},
 						},
 					},
 					doyoucompute.List{
@@ -74,34 +74,33 @@ func builderRoute() doyoucompute.Document {
 	}
 
 	document := doyoucompute.NewDocument("MY DOC")
-	docIntro := doyoucompute.NewParagraph().Next(doyoucompute.Text("I am an introduction paragraph"))
+	docIntro := doyoucompute.NewParagraph().Text("I am an introduction paragraph")
 
 	document.AddIntro(docIntro)
 
 	// Build the section
 	section := doyoucompute.NewSection("Intro")
-	intro := doyoucompute.NewParagraph().Next(doyoucompute.Text("cool text bro")).Next(doyoucompute.Code("very cool code")).Next(doyoucompute.Link{
-		Text: "Some Link",
-		Url:  "https://example.com",
-	})
+
+	intro := doyoucompute.NewParagraph().Text("cool text bro").Code("very cool code").Link("Some Link", "https://example.com")
 
 	section.AddIntro(intro)
 	section.AddBlockQuote("Here i am blockin' on my own")
 	section.AddRemoteContent(doyoucompute.Remote{Reader: file})
 	section.AddCodeBlock("sh", []string{"echo", "hello", "world"}, true)
 	section.AddCodeBlock("json", []string{`{"key": "value"}`}, false)
-	section.AddTable(
+
+	// Table
+	table := section.NewTable(
 		[]string{"my", "cool", "table"},
-		[]doyoucompute.Node{
-			doyoucompute.TableRow{Values: []string{"some", "cool", "content"}},
-			doyoucompute.TableRow{Values: []string{"more", "nice", "stuff"}},
-			doyoucompute.TableRow{Values: []string{"very", "great", "table"}},
-		},
 	)
-	section.AddList(doyoucompute.NUMBERED, []doyoucompute.Node{
-		doyoucompute.Text("first item"),
-		doyoucompute.Code("npm i"),
-	})
+	table.AddRow(doyoucompute.TableRow{Values: []string{"some", "cool", "content"}})
+	table.AddRow(doyoucompute.TableRow{Values: []string{"more", "nice", "stuff"}})
+	table.AddRow(doyoucompute.TableRow{Values: []string{"very", "great", "table"}})
+
+	// List
+	list := section.NewList(doyoucompute.NUMBERED)
+	list.Append(doyoucompute.Text("first item"))
+	list.Append(doyoucompute.Code("npm i"))
 
 	document.AddSection(section)
 
