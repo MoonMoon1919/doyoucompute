@@ -24,6 +24,13 @@ const (
 	DocumentType
 )
 
+type CodeBlockExecType int // this name is awful
+
+const (
+	Static CodeBlockExecType = iota + 1
+	Exec
+)
+
 type MaterializedContent struct {
 	Type     ContentType
 	Content  string

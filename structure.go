@@ -188,10 +188,10 @@ func (s *Section) NewList(listType ListTypeE) *List {
 	return &list
 }
 
-func (s *Section) WriteCodeBlock(blockType string, cmd []string, executable bool) {
+func (s *Section) WriteCodeBlock(blockType string, cmd []string, executable CodeBlockExecType) {
 	var newContent Node
 
-	if executable {
+	if executable == Exec {
 		newContent = Executable{
 			Shell: blockType,
 			Cmd:   cmd,
