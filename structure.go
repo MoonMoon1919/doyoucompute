@@ -44,22 +44,30 @@ func (l ListTypeE) Prefix() string {
 }
 
 type List struct {
-	Items      []Node // Preferably Text, Link, Code
+	Items      []Text // Preferably Text, Link, Code
 	TypeOfList ListTypeE
 }
 
 func (l List) Type() ContentType { return ListType }
 
-func (l List) Children() []Node { return l.Items }
+func (l List) Children() []Node {
+	nodes := make([]Node, len(l.Items))
+
+	for idx, item := range l.Items {
+		nodes[idx] = item
+	}
+
+	return nodes
+}
 
 func (l List) Identifer() string { return "" }
 
-func (l *List) Push(item Node) {
-	l.Items = append([]Node{item}, l.Items...)
+func (l *List) Push(val string) {
+	l.Items = append([]Text{Text(val)}, l.Items...)
 }
 
-func (l *List) Append(item Node) {
-	l.Items = append(l.Items, item)
+func (l *List) Append(val string) {
+	l.Items = append(l.Items, Text(val))
 }
 
 // A container that allows us to render content with paragraph semantics
@@ -120,12 +128,36 @@ func (s *Section) AddIntro(content *Paragraph) {
 	s.Content = append([]Node{content}, s.Content...)
 }
 
+func (s *Section) NewIntroWriter() *Paragraph {
+	paragraph := NewParagraph()
+
+	s.Content = append([]Node{paragraph}, s.Content...)
+
+	return paragraph
+}
+
 func (s *Section) AddSection(section Section) {
 	s.Content = append(s.Content, section)
 }
 
+func (s *Section) NewSection(name string) *Section {
+	section := NewSection(name)
+
+	s.Content = append(s.Content, &section)
+
+	return &section
+}
+
 func (s *Section) AddParagraph(paragraph Paragraph) {
 	s.Content = append(s.Content, paragraph)
+}
+
+func (s *Section) NewParagraph() *Paragraph {
+	paragraph := NewParagraph()
+
+	s.Content = append(s.Content, paragraph)
+
+	return paragraph
 }
 
 func (s *Section) AddTable(headers []string, rows []TableRow) {
@@ -142,7 +174,7 @@ func (s *Section) NewTable(headers []string) *Table {
 	return &table
 }
 
-func (s *Section) AddList(listType ListTypeE, items []Node) {
+func (s *Section) AddList(listType ListTypeE, items []Text) {
 	list := List{TypeOfList: listType, Items: items}
 
 	s.Content = append(s.Content, list)
@@ -156,7 +188,7 @@ func (s *Section) NewList(listType ListTypeE) *List {
 	return &list
 }
 
-func (s *Section) AddCodeBlock(blockType string, cmd []string, executable bool) {
+func (s *Section) WriteCodeBlock(blockType string, cmd []string, executable bool) {
 	var newContent Node
 
 	if executable {
@@ -174,11 +206,11 @@ func (s *Section) AddCodeBlock(blockType string, cmd []string, executable bool) 
 	s.Content = append(s.Content, newContent)
 }
 
-func (s *Section) AddBlockQuote(value string) {
+func (s *Section) WriteBlockQuote(value string) {
 	s.Content = append(s.Content, BlockQuote(value))
 }
 
-func (s *Section) AddRemoteContent(remote Remote) {
+func (s *Section) WriteRemoteContent(remote Remote) {
 	s.Content = append(s.Content, remote)
 }
 
@@ -205,6 +237,22 @@ func (d *Document) AddIntro(content *Paragraph) {
 	d.Content = append([]Node{content}, d.Content...)
 }
 
+func (d *Document) NewIntroWriter() *Paragraph {
+	paragraph := NewParagraph()
+
+	d.Content = append([]Node{paragraph}, d.Content...)
+
+	return paragraph
+}
+
 func (d *Document) AddSection(section Section) {
 	d.Content = append(d.Content, section)
+}
+
+func (d *Document) NewSection(name string) *Section {
+	s := NewSection(name)
+
+	d.Content = append(d.Content, &s)
+
+	return &s
 }

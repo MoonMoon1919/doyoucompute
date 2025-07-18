@@ -54,9 +54,9 @@ func manualRoute() doyoucompute.Document {
 					},
 					doyoucompute.List{
 						TypeOfList: doyoucompute.NUMBERED,
-						Items: []doyoucompute.Node{
+						Items: []doyoucompute.Text{
 							doyoucompute.Text("first item"),
-							doyoucompute.Code("npm i"),
+							doyoucompute.Text("second item"),
 						},
 					},
 				},
@@ -74,20 +74,16 @@ func builderRoute() doyoucompute.Document {
 	}
 
 	document := doyoucompute.NewDocument("MY DOC")
-	docIntro := doyoucompute.NewParagraph().Text("I am an introduction paragraph")
-
-	document.AddIntro(docIntro)
+	document.NewIntroWriter().Text("I am an introduction paragraph")
 
 	// Build the section
-	section := doyoucompute.NewSection("Intro")
+	section := document.NewSection("Intro")
+	section.NewIntroWriter().Text("cool text bro").Code("very cool code").Link("Some Link", "https://example.com")
 
-	intro := doyoucompute.NewParagraph().Text("cool text bro").Code("very cool code").Link("Some Link", "https://example.com")
-
-	section.AddIntro(intro)
-	section.AddBlockQuote("Here i am blockin' on my own")
-	section.AddRemoteContent(doyoucompute.Remote{Reader: file})
-	section.AddCodeBlock("sh", []string{"echo", "hello", "world"}, true)
-	section.AddCodeBlock("json", []string{`{"key": "value"}`}, false)
+	section.WriteBlockQuote("Here i am blockin' on my own")
+	section.WriteRemoteContent(doyoucompute.Remote{Reader: file})
+	section.WriteCodeBlock("sh", []string{"echo", "hello", "world"}, true)
+	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, false)
 
 	// Table
 	table := section.NewTable(
@@ -99,10 +95,8 @@ func builderRoute() doyoucompute.Document {
 
 	// List
 	list := section.NewList(doyoucompute.NUMBERED)
-	list.Append(doyoucompute.Text("first item"))
-	list.Append(doyoucompute.Code("npm i"))
-
-	document.AddSection(section)
+	list.Append("first item")
+	list.Append("second item")
 
 	return document
 }
