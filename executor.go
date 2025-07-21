@@ -2,6 +2,7 @@ package doyoucompute
 
 import (
 	"log"
+	"os"
 	"os/exec"
 	"strings"
 )
@@ -16,7 +17,6 @@ const (
 type TaskResult struct {
 	SectionName string
 	Command     string
-	Output      string
 	Status      TaskStatus
 	Error       error
 }
@@ -26,24 +26,22 @@ type TaskRunner func(plan CommandPlan) TaskResult
 func RunTask(plan CommandPlan) TaskResult {
 	cmd := exec.Command(plan.Args[0], plan.Args[1:]...)
 
-	output, err := cmd.Output()
-	if err != nil {
-		return TaskResult{
-			SectionName: plan.Context.Name,
-			Command:     strings.Join(plan.Args, " "),
-			Output:      string(output),
-			Status:      FAILED,
-			Error:       err,
-		}
-	}
-
-	return TaskResult{
+	result := TaskResult{
 		SectionName: plan.Context.Name,
 		Command:     strings.Join(plan.Args, " "),
-		Output:      string(output),
-		Status:      COMPLETED,
-		Error:       nil,
 	}
+
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		result.Error = err
+		result.Status = FAILED
+	} else {
+		result.Status = COMPLETED
+	}
+
+	return result
 }
 
 func RunExecutionPlan(plans []CommandPlan, runner TaskRunner) []TaskResult {

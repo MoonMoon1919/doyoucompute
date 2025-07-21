@@ -81,7 +81,7 @@ func builderRoute() doyoucompute.Document {
 
 	section.WriteBlockQuote("Here i am blockin' on my own")
 	section.WriteRemoteContent(doyoucompute.Remote{Reader: file})
-	section.WriteCodeBlock("sh", []string{"go", "build", "."}, doyoucompute.Exec)
+	section.WriteCodeBlock("sh", []string{"go", "test", "./...", "-v"}, doyoucompute.Exec)
 	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, doyoucompute.Static)
 
 	// Table
