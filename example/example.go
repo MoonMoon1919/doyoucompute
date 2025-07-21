@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
@@ -82,7 +81,7 @@ func builderRoute() doyoucompute.Document {
 
 	section.WriteBlockQuote("Here i am blockin' on my own")
 	section.WriteRemoteContent(doyoucompute.Remote{Reader: file})
-	section.WriteCodeBlock("sh", []string{"echo", "hello", "world"}, doyoucompute.Exec)
+	section.WriteCodeBlock("sh", []string{"go", "build", "."}, doyoucompute.Exec)
 	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, doyoucompute.Static)
 
 	// Table
@@ -102,11 +101,13 @@ func builderRoute() doyoucompute.Document {
 }
 
 func main() {
-	renderer := doyoucompute.Markdown{}
-	document := builderRoute()
-	rendered, _ := renderer.Render(document)
+	// renderer := doyoucompute.Markdown{}
+	// document := builderRoute()
+	// rendered, _ := renderer.Render(document)
 
-	manualRoute() // So go stops yelling at me
+	execRenderer := doyoucompute.ExecutionPlan{}
+	manualDocument := builderRoute()
+	executionPlan, _ := execRenderer.Render(manualDocument)
 
-	fmt.Print(rendered)
+	doyoucompute.RunExecutionPlan(executionPlan, doyoucompute.RunTask)
 }
