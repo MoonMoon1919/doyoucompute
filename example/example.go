@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
@@ -101,9 +102,11 @@ func builderRoute() doyoucompute.Document {
 }
 
 func main() {
-	// renderer := doyoucompute.Markdown{}
-	// document := builderRoute()
-	// rendered, _ := renderer.Render(document)
+	renderer := doyoucompute.Markdown{}
+	document := manualRoute()
+	rendered, _ := renderer.Render(document)
+
+	fmt.Print(rendered)
 
 	execRenderer := doyoucompute.ExecutionPlan{}
 	manualDocument := builderRoute()
