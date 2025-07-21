@@ -74,11 +74,11 @@ func builderRoute() doyoucompute.Document {
 	}
 
 	document := doyoucompute.NewDocument("MY DOC")
-	document.NewIntroWriter().Text("I am an introduction paragraph")
+	document.WriteIntro().Text("I am an introduction paragraph")
 
 	// Build the section
-	section := document.NewSection("Intro")
-	section.NewIntroWriter().Text("cool text bro").Code("very cool code").Link("Some Link", "https://example.com")
+	section := document.CreateSection("Intro")
+	section.WriteIntro().Text("cool text bro").Code("very cool code").Link("Some Link", "https://example.com")
 
 	section.WriteBlockQuote("Here i am blockin' on my own")
 	section.WriteRemoteContent(doyoucompute.Remote{Reader: file})
@@ -86,7 +86,7 @@ func builderRoute() doyoucompute.Document {
 	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, doyoucompute.Static)
 
 	// Table
-	table := section.NewTable(
+	table := section.CreateTable(
 		[]string{"my", "cool", "table"},
 	)
 	table.AddRow(doyoucompute.TableRow{Values: []string{"some", "cool", "content"}})
@@ -94,7 +94,7 @@ func builderRoute() doyoucompute.Document {
 	table.AddRow(doyoucompute.TableRow{Values: []string{"very", "great", "table"}})
 
 	// List
-	list := section.NewList(doyoucompute.NUMBERED)
+	list := section.CreateList(doyoucompute.NUMBERED)
 	list.Append("first item")
 	list.Append("second item")
 

@@ -44,7 +44,7 @@ func (l ListTypeE) Prefix() string {
 }
 
 type List struct {
-	Items      []Text // Preferably Text, Link, Code
+	Items      []Text
 	TypeOfList ListTypeE
 }
 
@@ -128,7 +128,7 @@ func (s *Section) AddIntro(content *Paragraph) {
 	s.Content = append([]Node{content}, s.Content...)
 }
 
-func (s *Section) NewIntroWriter() *Paragraph {
+func (s *Section) WriteIntro() *Paragraph {
 	paragraph := NewParagraph()
 
 	s.Content = append([]Node{paragraph}, s.Content...)
@@ -140,7 +140,7 @@ func (s *Section) AddSection(section Section) {
 	s.Content = append(s.Content, section)
 }
 
-func (s *Section) NewSection(name string) *Section {
+func (s *Section) CreateSection(name string) *Section {
 	section := NewSection(name)
 
 	s.Content = append(s.Content, &section)
@@ -152,7 +152,7 @@ func (s *Section) AddParagraph(paragraph Paragraph) {
 	s.Content = append(s.Content, paragraph)
 }
 
-func (s *Section) NewParagraph() *Paragraph {
+func (s *Section) WriteParagraph() *Paragraph {
 	paragraph := NewParagraph()
 
 	s.Content = append(s.Content, paragraph)
@@ -166,7 +166,7 @@ func (s *Section) AddTable(headers []string, rows []TableRow) {
 	s.Content = append(s.Content, table)
 }
 
-func (s *Section) NewTable(headers []string) *Table {
+func (s *Section) CreateTable(headers []string) *Table {
 	table := Table{Headers: headers, Items: make([]TableRow, 0)}
 
 	s.Content = append(s.Content, &table)
@@ -180,7 +180,7 @@ func (s *Section) AddList(listType ListTypeE, items []Text) {
 	s.Content = append(s.Content, list)
 }
 
-func (s *Section) NewList(listType ListTypeE) *List {
+func (s *Section) CreateList(listType ListTypeE) *List {
 	list := List{TypeOfList: listType}
 
 	s.Content = append(s.Content, &list)
@@ -237,7 +237,7 @@ func (d *Document) AddIntro(content *Paragraph) {
 	d.Content = append([]Node{content}, d.Content...)
 }
 
-func (d *Document) NewIntroWriter() *Paragraph {
+func (d *Document) WriteIntro() *Paragraph {
 	paragraph := NewParagraph()
 
 	d.Content = append([]Node{paragraph}, d.Content...)
@@ -249,7 +249,7 @@ func (d *Document) AddSection(section Section) {
 	d.Content = append(d.Content, section)
 }
 
-func (d *Document) NewSection(name string) *Section {
+func (d *Document) CreateSection(name string) *Section {
 	s := NewSection(name)
 
 	d.Content = append(d.Content, &s)
