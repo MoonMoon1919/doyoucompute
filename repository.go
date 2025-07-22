@@ -2,11 +2,6 @@ package doyoucompute
 
 import "os"
 
-type Repository interface {
-	Load(path string) (string, error)
-	Save(path string, document Document, renderer Renderer[string]) error
-}
-
 type FileRepository struct{}
 
 func (f FileRepository) Load(path string) (string, error) {
@@ -20,7 +15,7 @@ func (f FileRepository) Load(path string) (string, error) {
 	return LoadFile(file)
 }
 
-func (f FileRepository) Save(path string, document Document, renderer Renderer[string]) error {
+func (f FileRepository) Save(path string, content string) error {
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -28,5 +23,5 @@ func (f FileRepository) Save(path string, document Document, renderer Renderer[s
 
 	defer file.Close()
 
-	return WriteFile(file, document, renderer)
+	return WriteFile(file, content)
 }
