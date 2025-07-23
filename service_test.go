@@ -128,6 +128,7 @@ func TestCompareFile(t *testing.T) {
 		svc          Service
 		outpath      string
 		errorMessage string
+		matches      bool
 	}{
 		{
 			name:         "Passing",
@@ -135,6 +136,7 @@ func TestCompareFile(t *testing.T) {
 			svc:          newService(),
 			outpath:      "test.md",
 			errorMessage: "",
+			matches:      true,
 		},
 	}
 
@@ -159,8 +161,8 @@ func TestCompareFile(t *testing.T) {
 				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
 			}
 
-			if !comparisonResult.Matches {
-				t.Errorf("expected comparison match, Document Hash %s, File Hash %s", comparisonResult.DocumentHash, comparisonResult.FileHash)
+			if comparisonResult.Matches != tc.matches {
+				t.Errorf("expected comparison to be %v, Document Hash %s, File Hash %s", tc.matches, comparisonResult.DocumentHash, comparisonResult.FileHash)
 			}
 		})
 	}
@@ -168,22 +170,72 @@ func TestCompareFile(t *testing.T) {
 
 func TestPlanScriptExecution(t *testing.T) {
 	tests := []struct {
-		name string
-		svc  Service
+		name         string
+		document     Document
+		svc          Service
+		errorMessage string
+		expected     []CommandPlan
 	}{
 		{
-			name: "Passing",
-			svc:  newService(),
+			name:         "Passing",
+			document:     newDocument(),
+			svc:          newService(),
+			errorMessage: "",
+			expected: []CommandPlan{
+				{
+					Shell: "bash",
+					Args:  []string{"echo", "hello", "world"},
+					Context: SectionInfo{
+						Name:  "INTRO",
+						Level: 2,
+					},
+				},
+				{
+					Shell: "bash",
+					Args:  []string{"go", "get"},
+					Context: SectionInfo{
+						Name:  "Quick Start",
+						Level: 3,
+					},
+				},
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Given
-
 			// When
+			commands, err := tc.svc.PlanScriptExecution(&tc.document, ALL_SECTIONS)
+
+			var errMsg string
+			if err != nil {
+				errMsg = err.Error()
+			}
 
 			// Then
+			if errMsg != tc.errorMessage {
+				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
+			}
+
+			for idx, expected := range tc.expected {
+				found := commands[idx]
+
+				if found.Context != expected.Context {
+					t.Errorf("Expected context %v, got %v", expected.Context, found.Context)
+				}
+
+				if found.Shell != expected.Shell {
+					t.Errorf("Expected context %s, got %s", expected.Shell, found.Shell)
+				}
+
+				for idx, expectedArg := range expected.Args {
+					foundArg := found.Args[idx]
+
+					if expectedArg != foundArg {
+						t.Errorf("expected arg %s at index %d, found %s", expectedArg, idx, foundArg)
+					}
+				}
+			}
 		})
 	}
 }
