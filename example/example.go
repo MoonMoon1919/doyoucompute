@@ -104,7 +104,6 @@ func main() {
 	repo := doyoucompute.NewFileRepository()
 	fileRenderer := doyoucompute.NewMarkdownRenderer()
 	execRenderer := doyoucompute.NewExecutionRenderer()
-
 	svc := doyoucompute.NewService(repo, doyoucompute.RunTask, fileRenderer, execRenderer)
 
 	manualDoc := manualRoute()
