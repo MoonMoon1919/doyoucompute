@@ -149,7 +149,7 @@ func TestExecutionPlanRender(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := tc.renderer.Render(tc.document)
+			commands, err := tc.renderer.Render(tc.document)
 
 			var errMsg string
 			if err != nil {
@@ -161,7 +161,7 @@ func TestExecutionPlanRender(t *testing.T) {
 			}
 
 			for idx, expected := range tc.expected {
-				found := tc.renderer.Commands[idx]
+				found := commands[idx]
 
 				if found.Context != expected.Context {
 					t.Errorf("Expected context %v, got %v", expected.Context, found.Context)

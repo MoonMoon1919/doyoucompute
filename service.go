@@ -18,6 +18,8 @@ type Service struct {
 	executionRenderer Renderer[[]CommandPlan]
 }
 
+const ALL_SECTIONS = ""
+
 func NewService(repo Repository, runner TaskRunner, fileRenderer Renderer[string], executionRenderer Renderer[[]CommandPlan]) *Service {
 	return &Service{
 		repository:        repo,
@@ -27,7 +29,7 @@ func NewService(repo Repository, runner TaskRunner, fileRenderer Renderer[string
 	}
 }
 
-func (s Service) Render(document Document, outpath string) error {
+func (s Service) RenderFile(document *Document, outpath string) error {
 	content, err := s.fileRenderer.Render(document)
 	if err != nil {
 		return err
@@ -42,7 +44,7 @@ type ComparisonResult struct {
 	FileHash     string
 }
 
-func (s Service) Compare(document Document, pathToFile string) (ComparisonResult, error) {
+func (s Service) CompareFile(document *Document, pathToFile string) (ComparisonResult, error) {
 	content, err := s.fileRenderer.Render(document)
 	if err != nil {
 		return ComparisonResult{}, err
@@ -63,14 +65,14 @@ func (s Service) Compare(document Document, pathToFile string) (ComparisonResult
 	}, nil
 }
 
-func (s Service) PlanExecution(document Document) ([]CommandPlan, error) {
-	return s.executionRenderer.Render(document)
-}
-
-func (s Service) PlanExecutionForSection(document Document, sectionName string) ([]CommandPlan, error) {
+func (s Service) PlanScriptExecution(document *Document, sectionName string) ([]CommandPlan, error) {
 	executionPlan, err := s.executionRenderer.Render(document)
 	if err != nil {
 		return []CommandPlan{}, err
+	}
+
+	if sectionName == "" {
+		return executionPlan, nil
 	}
 
 	var commands []CommandPlan
@@ -88,36 +90,13 @@ func (s Service) PlanExecutionForSection(document Document, sectionName string) 
 	return commands, nil
 }
 
-func (s Service) ExecuteAll(document Document) ([]TaskResult, error) {
-	executionPlan, err := s.executionRenderer.Render(document)
+func (s Service) ExecuteScript(document *Document, sectionName string) ([]TaskResult, error) {
+	executionPlan, err := s.PlanScriptExecution(document, sectionName)
 	if err != nil {
 		return []TaskResult{}, err
 	}
 
 	results := RunExecutionPlan(executionPlan, s.taskRunner)
-
-	return results, nil
-}
-
-func (s Service) ExecuteSection(document Document, sectionName string) ([]TaskResult, error) {
-	executionPlan, err := s.executionRenderer.Render(document)
-	if err != nil {
-		return []TaskResult{}, err
-	}
-
-	var commands []CommandPlan
-
-	for _, commandPlan := range executionPlan {
-		if commandPlan.Context.Name == sectionName {
-			commands = append(commands, commandPlan)
-		}
-	}
-
-	if len(commands) == 0 {
-		return []TaskResult{}, fmt.Errorf("no executable blocks found for sectio '%s'", sectionName)
-	}
-
-	results := RunExecutionPlan(commands, s.taskRunner)
 
 	return results, nil
 }

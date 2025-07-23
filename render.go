@@ -326,9 +326,7 @@ type CommandPlan struct {
 	Context SectionInfo
 }
 
-type ExecutionPlan struct {
-	Commands []CommandPlan
-}
+type ExecutionPlan struct{}
 
 func (e ExecutionPlan) renderChildren(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
 	var commands []CommandPlan
@@ -394,13 +392,11 @@ func (e ExecutionPlan) renderWithTracking(node Node, contextPath *ContextPath) (
 	return commands, nil
 }
 
-func (e *ExecutionPlan) Render(node Node) ([]CommandPlan, error) {
+func (e ExecutionPlan) Render(node Node) ([]CommandPlan, error) {
 	cmds, err := e.renderWithTracking(node, &ContextPath{})
 	if err != nil {
 		return make([]CommandPlan, 0), err
 	}
 
-	e.Commands = append(e.Commands, cmds...)
-
-	return e.Commands, nil
+	return cmds, nil
 }

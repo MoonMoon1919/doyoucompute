@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
@@ -44,7 +43,7 @@ func manualRoute() doyoucompute.Document {
 						BlockType: "json",
 						Cmd:       []string{`{"key": "value"}`},
 					},
-					doyoucompute.Table{
+					&doyoucompute.Table{
 						Headers: []string{"my", "cool", "table"},
 						Items: []doyoucompute.TableRow{
 							{Values: []string{"some", "cool", "content"}},
@@ -52,7 +51,7 @@ func manualRoute() doyoucompute.Document {
 							{Values: []string{"very", "great", "table"}},
 						},
 					},
-					doyoucompute.List{
+					&doyoucompute.List{
 						TypeOfList: doyoucompute.NUMBERED,
 						Items: []doyoucompute.Text{
 							doyoucompute.Text("first item"),
@@ -102,15 +101,15 @@ func builderRoute() doyoucompute.Document {
 }
 
 func main() {
-	renderer := doyoucompute.Markdown{}
-	document := manualRoute()
-	rendered, _ := renderer.Render(document)
-
-	fmt.Print(rendered)
-
+	repo := doyoucompute.FileRepository{}
+	fileRenderer := doyoucompute.Markdown{}
 	execRenderer := doyoucompute.ExecutionPlan{}
-	manualDocument := builderRoute()
-	executionPlan, _ := execRenderer.Render(manualDocument)
 
-	doyoucompute.RunExecutionPlan(executionPlan, doyoucompute.RunTask)
+	svc := doyoucompute.NewService(repo, doyoucompute.RunTask, fileRenderer, execRenderer)
+
+	manualDoc := manualRoute()
+	builderDoc := builderRoute()
+
+	svc.RenderFile(&manualDoc, "./test.md")
+	svc.ExecuteScript(&builderDoc, doyoucompute.ALL_SECTIONS)
 }
