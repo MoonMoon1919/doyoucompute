@@ -101,9 +101,9 @@ func builderRoute() doyoucompute.Document {
 }
 
 func main() {
-	repo := doyoucompute.FileRepository{}
-	fileRenderer := doyoucompute.Markdown{}
-	execRenderer := doyoucompute.ExecutionPlan{}
+	repo := doyoucompute.NewFileRepository()
+	fileRenderer := doyoucompute.NewMarkdownRenderer()
+	execRenderer := doyoucompute.NewExecutionRenderer()
 
 	svc := doyoucompute.NewService(repo, doyoucompute.RunTask, fileRenderer, execRenderer)
 

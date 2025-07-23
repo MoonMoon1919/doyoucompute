@@ -4,6 +4,10 @@ import "os"
 
 type FileRepository struct{}
 
+func NewFileRepository() FileRepository {
+	return FileRepository{}
+}
+
 func (f FileRepository) Load(path string) (string, error) {
 	file, err := os.Open(path)
 	if err != nil {

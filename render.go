@@ -49,6 +49,10 @@ func (c ContextPath) CurrentLevel() int {
 // MARK: Markdown
 type Markdown struct{}
 
+func NewMarkdownRenderer() Markdown {
+	return Markdown{}
+}
+
 func (m Markdown) writeHeader(builder *strings.Builder, content string, level int) {
 	builder.WriteString(strings.Repeat("#", level))
 	builder.WriteString(" ")
@@ -326,9 +330,13 @@ type CommandPlan struct {
 	Context SectionInfo
 }
 
-type ExecutionPlan struct{}
+type Executioner struct{}
 
-func (e ExecutionPlan) renderChildren(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
+func NewExecutionRenderer() Executioner {
+	return Executioner{}
+}
+
+func (e Executioner) renderChildren(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
 	var commands []CommandPlan
 
 	for _, leaf := range node.Children() {
@@ -343,13 +351,13 @@ func (e ExecutionPlan) renderChildren(node Structurer, contextPath *ContextPath)
 	return commands, nil
 }
 
-func (e ExecutionPlan) renderStructureNode(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
+func (e Executioner) renderStructureNode(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
 	ctxPath := contextPath.Push(node.Identifer())
 
 	return e.renderChildren(node, &ctxPath)
 }
 
-func (e ExecutionPlan) renderExecutable(content MaterializedContent, contextPath *ContextPath) (CommandPlan, error) {
+func (e Executioner) renderExecutable(content MaterializedContent, contextPath *ContextPath) (CommandPlan, error) {
 	shell := content.Metadata["Shell"].(string)
 	args := content.Metadata["Command"].([]string)
 
@@ -360,7 +368,7 @@ func (e ExecutionPlan) renderExecutable(content MaterializedContent, contextPath
 	}, nil
 }
 
-func (e ExecutionPlan) renderWithTracking(node Node, contextPath *ContextPath) ([]CommandPlan, error) {
+func (e Executioner) renderWithTracking(node Node, contextPath *ContextPath) ([]CommandPlan, error) {
 	var commands []CommandPlan
 
 	switch node.Type() {
@@ -392,7 +400,7 @@ func (e ExecutionPlan) renderWithTracking(node Node, contextPath *ContextPath) (
 	return commands, nil
 }
 
-func (e ExecutionPlan) Render(node Node) ([]CommandPlan, error) {
+func (e Executioner) Render(node Node) ([]CommandPlan, error) {
 	cmds, err := e.renderWithTracking(node, &ContextPath{})
 	if err != nil {
 		return make([]CommandPlan, 0), err

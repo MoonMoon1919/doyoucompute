@@ -86,7 +86,7 @@ func TestMarkdownRender(t *testing.T) {
 func TestExecutionPlanRender(t *testing.T) {
 	tests := []struct {
 		name         string
-		renderer     ExecutionPlan
+		renderer     Executioner
 		document     Document
 		errorMessage string
 		expected     []CommandPlan
