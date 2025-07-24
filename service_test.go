@@ -92,6 +92,36 @@ func newDocument() Document {
 	}
 }
 
+func checkErrors(expectedErrorMsg string, err error, t *testing.T) {
+	var errMsg string
+	if err != nil {
+		errMsg = err.Error()
+	}
+
+	if errMsg != expectedErrorMsg {
+		t.Errorf("expected error %s, got %s", expectedErrorMsg, errMsg)
+	}
+}
+
+func testServiceOperation[T any](
+	t *testing.T,
+	operation func(*Service) (T, error),
+	taskRunnerResults map[string]TaskResult,
+	errorMessage string,
+	comparisonFunc func(T, *Service, *testing.T),
+) {
+	svc := newService(taskRunnerResults)
+
+	res, err := operation(&svc)
+
+	checkErrors(errorMessage, err, t)
+	if errorMessage != "" {
+		return // bail out before validation for tests w/ non-null errors
+	}
+
+	comparisonFunc(res, &svc, t)
+}
+
 func TestRenderFile(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -103,7 +133,6 @@ func TestRenderFile(t *testing.T) {
 		{
 			name:         "Passing",
 			document:     newDocument(),
-			svc:          newService(map[string]TaskResult{}),
 			outpath:      "test.md",
 			errorMessage: "",
 		},
@@ -111,27 +140,26 @@ func TestRenderFile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// When
-			err := tc.svc.RenderFile(&tc.document, tc.outpath)
+			testServiceOperation(
+				t,
+				func(s *Service) (string, error) {
+					err := s.RenderFile(&tc.document, tc.outpath)
 
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
+					return "", err
+				},
+				map[string]TaskResult{},
+				tc.errorMessage,
+				func(res string, svc *Service, t *testing.T) {
+					comparisonResult, err := svc.CompareFile(&tc.document, tc.outpath)
+					if err != nil {
+						t.Errorf("Error during comparison %s", err.Error())
+					}
 
-			// Then
-			if errMsg != tc.errorMessage {
-				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
-			}
-
-			comparisonResult, err := tc.svc.CompareFile(&tc.document, tc.outpath)
-			if err != nil {
-				t.Errorf("Error during comparison %s", err.Error())
-			}
-
-			if !comparisonResult.Matches {
-				t.Errorf("expected comparison match, Document Hash %s, File Hash %s", comparisonResult.DocumentHash, comparisonResult.FileHash)
-			}
+					if !comparisonResult.Matches {
+						t.Errorf("expected comparison match, Document Hash %s, File Hash %s", comparisonResult.DocumentHash, comparisonResult.FileHash)
+					}
+				},
+			)
 		})
 	}
 }
@@ -140,7 +168,6 @@ func TestCompareFile(t *testing.T) {
 	tests := []struct {
 		name         string
 		document     Document
-		svc          Service
 		outpath      string
 		errorMessage string
 		matches      bool
@@ -148,7 +175,6 @@ func TestCompareFile(t *testing.T) {
 		{
 			name:         "Passing",
 			document:     newDocument(),
-			svc:          newService(map[string]TaskResult{}),
 			outpath:      "test.md",
 			errorMessage: "",
 			matches:      true,
@@ -157,28 +183,24 @@ func TestCompareFile(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Given
-			err := tc.svc.RenderFile(&tc.document, tc.outpath)
-			if err != nil {
-				t.Errorf("unexpected error %s rendering file", err.Error())
-			}
+			testServiceOperation(
+				t,
+				func(s *Service) (ComparisonResult, error) {
+					err := s.RenderFile(&tc.document, tc.outpath)
+					if err != nil {
+						t.Errorf("unexpected error %s rendering file", err.Error())
+					}
 
-			// When
-			comparisonResult, err := tc.svc.CompareFile(&tc.document, tc.outpath)
-
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
-
-			// Then
-			if errMsg != tc.errorMessage {
-				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
-			}
-
-			if comparisonResult.Matches != tc.matches {
-				t.Errorf("expected comparison to be %v, Document Hash %s, File Hash %s", tc.matches, comparisonResult.DocumentHash, comparisonResult.FileHash)
-			}
+					return s.CompareFile(&tc.document, tc.outpath)
+				},
+				map[string]TaskResult{},
+				tc.errorMessage,
+				func(cr ComparisonResult, s *Service, t *testing.T) {
+					if cr.Matches != tc.matches {
+						t.Errorf("expected comparison to be %v, Document Hash %s, File Hash %s", tc.matches, cr.DocumentHash, cr.FileHash)
+					}
+				},
+			)
 		})
 	}
 }
@@ -187,14 +209,12 @@ func TestPlanScriptExecution(t *testing.T) {
 	tests := []struct {
 		name         string
 		document     Document
-		svc          Service
 		errorMessage string
 		expected     []CommandPlan
 	}{
 		{
 			name:         "Passing",
 			document:     newDocument(),
-			svc:          newService(map[string]TaskResult{}),
 			errorMessage: "",
 			expected: []CommandPlan{
 				{
@@ -219,38 +239,36 @@ func TestPlanScriptExecution(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// When
-			commands, err := tc.svc.PlanScriptExecution(&tc.document, ALL_SECTIONS)
+			testServiceOperation(
+				t,
+				func(s *Service) ([]CommandPlan, error) {
+					return s.PlanScriptExecution(&tc.document, ALL_SECTIONS)
+				},
+				map[string]TaskResult{},
+				tc.errorMessage,
+				func(cp []CommandPlan, s *Service, t *testing.T) {
+					for idx, expected := range tc.expected {
+						found := cp[idx]
 
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
+						if found.Context != expected.Context {
+							t.Errorf("Expected context %v, got %v", expected.Context, found.Context)
+						}
 
-			// Then
-			if errMsg != tc.errorMessage {
-				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
-			}
+						if found.Shell != expected.Shell {
+							t.Errorf("Expected context %s, got %s", expected.Shell, found.Shell)
+						}
 
-			for idx, expected := range tc.expected {
-				found := commands[idx]
+						for idx, expectedArg := range expected.Args {
+							foundArg := found.Args[idx]
 
-				if found.Context != expected.Context {
-					t.Errorf("Expected context %v, got %v", expected.Context, found.Context)
-				}
-
-				if found.Shell != expected.Shell {
-					t.Errorf("Expected context %s, got %s", expected.Shell, found.Shell)
-				}
-
-				for idx, expectedArg := range expected.Args {
-					foundArg := found.Args[idx]
-
-					if expectedArg != foundArg {
-						t.Errorf("expected arg %s at index %d, found %s", expectedArg, idx, foundArg)
+							if expectedArg != foundArg {
+								t.Errorf("expected arg %s at index %d, found %s", expectedArg, idx, foundArg)
+							}
+						}
 					}
-				}
-			}
+				},
+			)
+
 		})
 	}
 }
@@ -285,40 +303,28 @@ func TestExecuteScript(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			// Given
-			svc := newService(tc.taskRunnerResults)
+			testServiceOperation(
+				t,
+				func(s *Service) ([]TaskResult, error) {
+					return s.ExecuteScript(&tc.document, ALL_SECTIONS)
+				},
+				tc.taskRunnerResults,
+				tc.errorMessage,
+				func(tr []TaskResult, s *Service, t *testing.T) {
+					var expected []TaskResult
+					for _, result := range tc.taskRunnerResults {
+						expected = append(expected, result)
+					}
 
-			var expected []TaskResult
-			for _, result := range tc.taskRunnerResults {
-				expected = append(expected, result)
-			}
+					for idx, result := range tr {
+						expected := expected[idx]
 
-			expectedNumTasks := len(expected)
-
-			// When
-			results, err := svc.ExecuteScript(&tc.document, ALL_SECTIONS)
-
-			var errMsg string
-			if err != nil {
-				errMsg = err.Error()
-			}
-
-			// Then
-			if errMsg != tc.errorMessage {
-				t.Errorf("Expected error %s, got %s", tc.errorMessage, errMsg)
-			}
-
-			if len(results) != expectedNumTasks {
-				t.Errorf("Expected %d results, got %d", expectedNumTasks, len(results))
-			}
-
-			for idx, result := range results {
-				expected := expected[idx]
-
-				if expected != result {
-					t.Errorf("Expected TaskResult %v, got %v", expected, result)
-				}
-			}
+						if expected != result {
+							t.Errorf("Expected TaskResult %v, got %v", expected, result)
+						}
+					}
+				},
+			)
 		})
 	}
 }
