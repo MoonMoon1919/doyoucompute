@@ -13,14 +13,14 @@ type Repository interface {
 
 type Service struct {
 	repository        Repository
-	taskRunner        TaskRunner
+	taskRunner        Runner
 	fileRenderer      Renderer[string]
 	executionRenderer Renderer[[]CommandPlan]
 }
 
 const ALL_SECTIONS = ""
 
-func NewService(repo Repository, runner TaskRunner, fileRenderer Renderer[string], executionRenderer Renderer[[]CommandPlan]) Service {
+func NewService(repo Repository, runner Runner, fileRenderer Renderer[string], executionRenderer Renderer[[]CommandPlan]) Service {
 	return Service{
 		repository:        repo,
 		taskRunner:        runner,

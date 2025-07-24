@@ -21,9 +21,17 @@ type TaskResult struct {
 	Error       error
 }
 
-type TaskRunner func(plan CommandPlan) TaskResult
+type Runner interface {
+	Run(plan CommandPlan) TaskResult
+}
 
-func RunTask(plan CommandPlan) TaskResult {
+type TaskRunner struct{}
+
+func NewTaskRunner() TaskRunner {
+	return TaskRunner{}
+}
+
+func (t TaskRunner) Run(plan CommandPlan) TaskResult {
 	cmd := exec.Command(plan.Args[0], plan.Args[1:]...)
 
 	result := TaskResult{
@@ -44,13 +52,13 @@ func RunTask(plan CommandPlan) TaskResult {
 	return result
 }
 
-func RunExecutionPlan(plans []CommandPlan, runner TaskRunner) []TaskResult {
+func RunExecutionPlan(plans []CommandPlan, runner Runner) []TaskResult {
 	results := make([]TaskResult, len(plans))
 
 	for idx, commandPlan := range plans {
 		log.Printf("[Section: %s] - Running command: '%s'", commandPlan.Context.Name, strings.Join(commandPlan.Args, " "))
 
-		results[idx] = runner(commandPlan)
+		results[idx] = runner.Run(commandPlan)
 	}
 
 	return results
