@@ -264,16 +264,56 @@ func TestListPush(t *testing.T) {
 
 func TestListAppend(t *testing.T) {
 	tests := []struct {
-		name string
+		name           string
+		startingLength int
+		newItem        string
+		errorMessage   string
 	}{
 		{
-			name: "Pass",
+			name:           "Pass-ExistingItems",
+			startingLength: 10,
+			newItem:        "new stuff",
+			errorMessage:   "",
+		},
+		{
+			name:           "Pass-NoItems",
+			startingLength: 0,
+			newItem:        "new stuff",
+			errorMessage:   "",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *List {
+					initialItems := make([]Text, tc.startingLength)
 
+					for idx := range tc.startingLength {
+						initialItems[idx] = Text(fmt.Sprintf("item-%d", idx))
+					}
+
+					list := List{TypeOfList: BULLET, Items: initialItems}
+
+					return &list
+				},
+				func(list *List) (Text, error) {
+					list.Append(tc.newItem)
+
+					return list.Items[len(list.Items)-1], nil
+				},
+				tc.errorMessage,
+				func(firstItem Text, list *List, t *testing.T) {
+					if len(list.Items) != tc.startingLength+1 {
+						t.Errorf("Expected to have %d items, found %d", tc.startingLength+1, len(list.Items))
+					}
+
+					if firstItem != Text(tc.newItem) {
+						t.Errorf("Expected last item to be %v, found %v", Text(tc.newItem), firstItem)
+					}
+				},
+			)
 		})
 	}
 }
