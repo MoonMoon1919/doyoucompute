@@ -5,6 +5,13 @@ type Table struct {
 	Items   []TableRow
 }
 
+func NewTable(headers []string, items []TableRow) *Table {
+	return &Table{
+		Headers: headers,
+		Items:   items,
+	}
+}
+
 func (t Table) Type() ContentType { return TableType }
 
 func (t Table) Children() []Node {
