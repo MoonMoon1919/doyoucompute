@@ -25,6 +25,7 @@ func testOperation[T Structurer, R any](
 	comparisonFunc(res, structUnderTest, t)
 }
 
+// MARK: Table
 func TestTableAddRow(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -149,5 +150,146 @@ func TestTableIdentifier(t *testing.T) {
 
 	if table.Identifer() != "" {
 		t.Errorf("Expected no table identifiers")
+	}
+}
+
+// MARK: List
+func TestListChildren(t *testing.T) {
+	tests := []struct {
+		name         string
+		numChildren  int
+		errorMessage string
+	}{
+		{
+			name:        "Pass-SomeChildren",
+			numChildren: 10,
+		},
+		{
+			name:        "Pass-NoChildren",
+			numChildren: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *List {
+					list := NewList(BULLET)
+
+					for idx := range tc.numChildren {
+						list.Append(fmt.Sprintf("%d", idx))
+					}
+
+					return list
+				},
+				func(t *List) ([]Node, error) {
+					return t.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, list *List, t *testing.T) {
+					if len(list.Items) != tc.numChildren {
+						t.Errorf("Expected %d children, found %d", tc.numChildren, len(list.Items))
+					}
+
+					expected := make([]Node, len(list.Items))
+					for idx, row := range list.Items {
+						expected[idx] = row
+					}
+
+					if !reflect.DeepEqual(result, expected) {
+						t.Errorf("Expected result %v, got %v", expected, result)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestListPush(t *testing.T) {
+	tests := []struct {
+		name           string
+		startingLength int
+		newItem        string
+		errorMessage   string
+	}{
+		{
+			name:           "Pass-ExistingItems",
+			startingLength: 10,
+			newItem:        "new stuff",
+			errorMessage:   "",
+		},
+		{
+			name:           "Pass-NoItems",
+			startingLength: 0,
+			newItem:        "new stuff",
+			errorMessage:   "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *List {
+					initialItems := make([]Text, tc.startingLength)
+
+					for idx := range tc.startingLength {
+						initialItems[idx] = Text(fmt.Sprintf("item-%d", idx))
+					}
+
+					list := List{TypeOfList: BULLET, Items: initialItems}
+
+					return &list
+				},
+				func(list *List) (Text, error) {
+					list.Push(tc.newItem)
+
+					return list.Items[0], nil
+				},
+				tc.errorMessage,
+				func(firstItem Text, list *List, t *testing.T) {
+					if len(list.Items) != tc.startingLength+1 {
+						t.Errorf("Expected to have %d items, found %d", tc.startingLength+1, len(list.Items))
+					}
+
+					if firstItem != Text(tc.newItem) {
+						t.Errorf("Expected first item to be %v, found %v", Text(tc.newItem), firstItem)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestListAppend(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Pass",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+
+		})
+	}
+}
+
+func TestListIdentifer(t *testing.T) {
+	list := NewList(BULLET)
+
+	if list.Identifer() != "" {
+		t.Error("Expected list identifier to be empty")
+	}
+}
+
+func TestListType(t *testing.T) {
+	list := NewList(NUMBERED)
+
+	if list.Type() != ListType {
+		t.Errorf("Expected List.Type() to be %d, got %d", ListType, list.Type())
 	}
 }

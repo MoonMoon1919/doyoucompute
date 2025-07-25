@@ -55,6 +55,13 @@ type List struct {
 	TypeOfList ListTypeE
 }
 
+func NewList(typeOfList ListTypeE) *List {
+	return &List{
+		TypeOfList: typeOfList,
+		Items:      make([]Text, 0),
+	}
+}
+
 func (l List) Type() ContentType { return ListType }
 
 func (l List) Children() []Node {
