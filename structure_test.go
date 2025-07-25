@@ -1,6 +1,7 @@
 package doyoucompute
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -22,6 +23,51 @@ func testOperation[T Structurer, R any](
 	}
 
 	comparisonFunc(res, structUnderTest, t)
+}
+
+func TestTableAddRow(t *testing.T) {
+	tests := []struct {
+		name         string
+		numItems     int
+		errorMessage string
+	}{
+		{
+			name:         "Pass-HasRows",
+			numItems:     10,
+			errorMessage: "",
+		},
+		{
+			name:         "Pass-NoRows",
+			numItems:     0,
+			errorMessage: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Table {
+					table := NewTable([]string{"cool", "header"}, []TableRow{})
+
+					return table
+				},
+				func(table *Table) ([]TableRow, error) {
+					for idx := range tc.numItems {
+						table.AddRow(TableRow{Values: []string{"sweet", fmt.Sprintf("%d", idx)}})
+					}
+
+					return table.Items, nil
+				},
+				tc.errorMessage,
+				func(rows []TableRow, table *Table, t *testing.T) {
+					if len(table.Items) != tc.numItems {
+						t.Errorf("Expected %d items, found %d", tc.numItems, len(table.Items))
+					}
+				},
+			)
+		})
+	}
 }
 
 func TestTableChildren(t *testing.T) {
