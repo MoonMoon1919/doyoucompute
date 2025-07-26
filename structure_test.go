@@ -183,8 +183,8 @@ func TestListChildren(t *testing.T) {
 
 					return list
 				},
-				func(t *List) ([]Node, error) {
-					return t.Children(), nil
+				func(l *List) ([]Node, error) {
+					return l.Children(), nil
 				},
 				tc.errorMessage,
 				func(result []Node, list *List, t *testing.T) {
@@ -331,5 +331,55 @@ func TestListType(t *testing.T) {
 
 	if list.Type() != ListType {
 		t.Errorf("Expected List.Type() to be %d, got %d", ListType, list.Type())
+	}
+}
+
+// MARK: Paragraph
+func TestParagraphChildren(t *testing.T) {
+	tests := []struct {
+		name         string
+		numChildren  int
+		errorMessage string
+	}{
+		{
+			name:         "Pass-SomeChildren",
+			numChildren:  10,
+			errorMessage: "",
+		},
+		{
+			name:         "Pass-NoChildren",
+			numChildren:  0,
+			errorMessage: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Paragraph {
+					paragraph := NewParagraph()
+
+					for idx := range tc.numChildren {
+						paragraph.Text(fmt.Sprintf("Text item %d", idx))
+					}
+
+					return paragraph
+				},
+				func(p *Paragraph) ([]Node, error) {
+					return p.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, paragraph *Paragraph, t *testing.T) {
+					if len(paragraph.Items) != tc.numChildren {
+						t.Errorf("Expected %d children, found %d", tc.numChildren, len(paragraph.Items))
+					}
+
+					if !reflect.DeepEqual(result, paragraph.Items) {
+						t.Errorf("Expected result %v, got %v", paragraph.Items, result)
+					}
+				},
+			)
+		})
 	}
 }
