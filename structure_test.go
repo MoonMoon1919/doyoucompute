@@ -383,3 +383,211 @@ func TestParagraphChildren(t *testing.T) {
 		})
 	}
 }
+
+func TestParagraphText(t *testing.T) {
+	tests := []struct {
+		name          string
+		body          string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Pass-NoExistingItems",
+			body:          "Sik text",
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Pass-SomeItems",
+			body:          "Sik text",
+			existingItems: 10,
+			errorMessage:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Paragraph {
+					para := NewParagraph()
+
+					for idx := range tc.existingItems {
+						if idx%2 == 0 {
+							para.Text(fmt.Sprintf("Text idx %d", idx))
+						} else {
+							para.Code(fmt.Sprintf("Code idx %d", idx))
+						}
+					}
+
+					return para
+				},
+				func(p *Paragraph) ([]Node, error) {
+					p = p.Text(tc.body)
+
+					return p.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, paragraph *Paragraph, t *testing.T) {
+					if len(paragraph.Items) < 1 {
+						t.Errorf("Expected at least 1 child, got %d", len(paragraph.Children()))
+					}
+
+					lastItem := result[len(paragraph.Children())-1]
+
+					if lastItem.Type() != TextType {
+						t.Errorf("")
+					}
+
+					materializedContent, err := lastItem.(Text).Materialize()
+					if err != nil {
+						t.Errorf("Got unexpected error materializing content %s", err.Error())
+					}
+					if materializedContent.Content != tc.body {
+						t.Errorf("Expected content %s, got %s", materializedContent.Content, tc.body)
+					}
+				},
+			)
+		})
+	}
+}
+func TestParagraphCode(t *testing.T) {
+	tests := []struct {
+		name          string
+		body          string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Pass-NoExistingItems",
+			body:          "Sik text",
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Pass-SomeItems",
+			body:          "Sik text",
+			existingItems: 10,
+			errorMessage:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Paragraph {
+					para := NewParagraph()
+
+					for idx := range tc.existingItems {
+						if idx%2 == 0 {
+							para.Text(fmt.Sprintf("Text idx %d", idx))
+						} else {
+							para.Code(fmt.Sprintf("Code idx %d", idx))
+						}
+					}
+
+					return para
+				},
+				func(p *Paragraph) ([]Node, error) {
+					p = p.Code(tc.body)
+
+					return p.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, paragraph *Paragraph, t *testing.T) {
+					if len(paragraph.Items) < 1 {
+						t.Errorf("Expected at least 1 child, got %d", len(paragraph.Children()))
+					}
+
+					lastItem := result[len(paragraph.Children())-1]
+
+					if lastItem.Type() != CodeType {
+						t.Errorf("")
+					}
+
+					materializedContent, err := lastItem.(Code).Materialize()
+					if err != nil {
+						t.Errorf("Got unexpected error materializing content %s", err.Error())
+					}
+					if materializedContent.Content != tc.body {
+						t.Errorf("Expected content %s, got %s", materializedContent.Content, tc.body)
+					}
+				},
+			)
+		})
+	}
+}
+func TestParagraphLink(t *testing.T) {
+	tests := []struct {
+		name          string
+		body          string
+		link          string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Pass-NoExistingItems",
+			body:          "Sik text",
+			link:          "https://example.com",
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Pass-SomeItems",
+			body:          "Sik text",
+			link:          "https://google.com",
+			existingItems: 10,
+			errorMessage:  "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Paragraph {
+					para := NewParagraph()
+
+					for idx := range tc.existingItems {
+						if idx%2 == 0 {
+							para.Text(fmt.Sprintf("Text idx %d", idx))
+						} else {
+							para.Code(fmt.Sprintf("Code idx %d", idx))
+						}
+					}
+
+					return para
+				},
+				func(p *Paragraph) ([]Node, error) {
+					p = p.Link(tc.body, tc.link)
+
+					return p.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, paragraph *Paragraph, t *testing.T) {
+					if len(paragraph.Items) < 1 {
+						t.Errorf("Expected at least 1 child, got %d", len(paragraph.Children()))
+					}
+
+					lastItem := result[len(paragraph.Children())-1]
+
+					if lastItem.Type() != LinkType {
+						t.Errorf("")
+					}
+
+					materializedContent, err := lastItem.(Link).Materialize()
+					if err != nil {
+						t.Errorf("Got unexpected error materializing content %s", err.Error())
+					}
+					if materializedContent.Content != tc.body {
+						t.Errorf("Expected content %s, got %s", materializedContent.Content, tc.body)
+					}
+					if materializedContent.Metadata["Url"] != tc.link {
+						t.Errorf("Expected content %s, got %s", materializedContent.Metadata["Url"], tc.link)
+					}
+				},
+			)
+		})
+	}
+}
