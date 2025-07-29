@@ -436,7 +436,7 @@ func TestParagraphText(t *testing.T) {
 					lastItem := result[len(paragraph.Children())-1]
 
 					if lastItem.Type() != TextType {
-						t.Errorf("")
+						t.Errorf("Expected error type to be %d got %d", TextType, lastItem.Type())
 					}
 
 					materializedContent, err := lastItem.(Text).Materialize()
@@ -503,7 +503,7 @@ func TestParagraphCode(t *testing.T) {
 					lastItem := result[len(paragraph.Children())-1]
 
 					if lastItem.Type() != CodeType {
-						t.Errorf("")
+						t.Errorf("Expected error type to be %d got %d", CodeType, lastItem.Type())
 					}
 
 					materializedContent, err := lastItem.(Code).Materialize()
@@ -573,7 +573,7 @@ func TestParagraphLink(t *testing.T) {
 					lastItem := result[len(paragraph.Children())-1]
 
 					if lastItem.Type() != LinkType {
-						t.Errorf("")
+						t.Errorf("Expected error type to be %d got %d", LinkType, lastItem.Type())
 					}
 
 					materializedContent, err := lastItem.(Link).Materialize()
@@ -581,13 +581,480 @@ func TestParagraphLink(t *testing.T) {
 						t.Errorf("Got unexpected error materializing content %s", err.Error())
 					}
 					if materializedContent.Content != tc.body {
-						t.Errorf("Expected content %s, got %s", materializedContent.Content, tc.body)
+						t.Errorf("Expected content %s, got %s", tc.body, materializedContent.Content)
 					}
 					if materializedContent.Metadata["Url"] != tc.link {
-						t.Errorf("Expected content %s, got %s", materializedContent.Metadata["Url"], tc.link)
+						t.Errorf("Expected content %s, got %s", tc.link, materializedContent.Metadata["Url"])
 					}
 				},
 			)
 		})
+	}
+}
+
+// MARK: Section
+func TestSectionChildren(t *testing.T) {
+	tests := []struct {
+		name         string
+		sectionName  string
+		numChildren  int
+		errorMessage string
+	}{
+		{
+			name:         "Pass-SomeChildren",
+			sectionName:  "Cool Section",
+			numChildren:  10,
+			errorMessage: "",
+		},
+		{
+			name:         "Pass-NoChildren",
+			sectionName:  "Very Cool Section",
+			numChildren:  0,
+			errorMessage: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection(tc.sectionName)
+
+					for idx := range tc.numChildren {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(p *Section) ([]Node, error) {
+					return p.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, paragraph *Section, t *testing.T) {
+					if len(paragraph.Content) != tc.numChildren {
+						t.Errorf("Expected %d children, found %d", tc.numChildren, len(paragraph.Content))
+					}
+
+					if !reflect.DeepEqual(result, paragraph.Content) {
+						t.Errorf("Expected result %v, got %v", paragraph.Content, result)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionAddIntro(t *testing.T) {
+	tests := []struct {
+		name          string
+		introContent  string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					introText := NewParagraph().Text(tc.introContent)
+
+					s.AddIntro(introText)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the first item to ensure it's a paragraph
+					firstItem := result[0]
+					if firstItem.Type() != ParagraphType {
+						t.Errorf("Expected error type to be %d got %d", ParagraphType, firstItem.Type())
+					}
+
+					// Check the content
+					content := firstItem.(*Paragraph).Children()
+
+					if content[0] != Text(tc.introContent) {
+						t.Errorf("Expected content %v, got %v", Text(tc.introContent), content[0])
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionWriteIntro(t *testing.T) {
+	tests := []struct {
+		name          string
+		introContent  string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+
+					s.WriteIntro().Text(tc.introContent)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the first item to ensure it's a paragraph
+					firstItem := result[0]
+					if firstItem.Type() != ParagraphType {
+						t.Errorf("Expected error type to be %d got %d", ParagraphType, firstItem.Type())
+					}
+
+					// Check the content
+					content := firstItem.(*Paragraph).Children()
+
+					if content[0] != Text(tc.introContent) {
+						t.Errorf("Expected content %v, got %v", Text(tc.introContent), content[0])
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionAddSection(t *testing.T) {
+	tests := []struct {
+		name          string
+		sectionName   string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.AddSection(NewSection(tc.sectionName))
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != SectionType {
+						t.Errorf("Expected error type to be %d got %d", SectionType, lastItem.Type())
+					}
+
+					if lastItem.(Section).Name != tc.sectionName {
+						t.Errorf("Expected last section to have name %s, got %s", tc.sectionName, lastItem.(Section).Name)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionCreateSection(t *testing.T) {
+	tests := []struct {
+		name          string
+		sectionName   string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.CreateSection(tc.sectionName)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != SectionType {
+						t.Errorf("Expected error type to be %d got %d", SectionType, lastItem.Type())
+					}
+
+					if lastItem.(*Section).Name != tc.sectionName {
+						t.Errorf("Expected last section to have name %s, got %s", tc.sectionName, lastItem.(Section).Name)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionWriteParagraph(t *testing.T) {
+	tests := []struct {
+		name             string
+		paragraphContent string
+		existingItems    int
+		errorMessage     string
+	}{
+		{
+			name:             "Passing-NoItems",
+			paragraphContent: "Cool information",
+			errorMessage:     "",
+			existingItems:    0,
+		},
+		{
+			name:             "Passing-SomeItems",
+			paragraphContent: "Cool information",
+			errorMessage:     "",
+			existingItems:    10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.WriteParagraph().Text(tc.paragraphContent)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != ParagraphType {
+						t.Errorf("Expected error type to be %d got %d", TextType, lastItem.Type())
+					}
+
+					// Check if the first item in the section is a paragraph
+					firstItem := lastItem.(*Paragraph).Children()[0]
+					if firstItem.Type() != TextType {
+						t.Errorf("Expected error type to be %d got %d", TextType, firstItem.Type())
+					}
+
+					materializedContent, _ := firstItem.(Text).Materialize()
+					if materializedContent.Content != tc.paragraphContent {
+						t.Errorf("Expected content %v, got %v", tc.paragraphContent, materializedContent.Content)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestSectionAddTable(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionCreateTable(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionAddList(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionCreateList(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionWriteCodeBlock(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionWriteBlockQuote(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
+	}
+}
+
+func TestSectionWriteRemoteContent(t *testing.T) {
+	tests := []struct {
+		name string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {})
 	}
 }
