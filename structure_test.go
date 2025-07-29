@@ -942,7 +942,7 @@ func TestSectionWriteParagraph(t *testing.T) {
 					// Get the last item to ensure it's a section
 					lastItem := result[len(section.Children())-1]
 					if lastItem.Type() != ParagraphType {
-						t.Errorf("Expected error type to be %d got %d", TextType, lastItem.Type())
+						t.Errorf("Expected error type to be %d got %d", ParagraphType, lastItem.Type())
 					}
 
 					// Check if the first item in the section is a paragraph
@@ -963,29 +963,123 @@ func TestSectionWriteParagraph(t *testing.T) {
 
 func TestSectionAddTable(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		headers       []string
+		rows          []TableRow
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			headers:       []string{"cool", "headers"},
+			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			headers:       []string{"cool", "headers"},
+			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			errorMessage:  "",
+			existingItems: 10,
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.AddTable(tc.headers, tc.rows)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != TableType {
+						t.Errorf("Expected error type to be %d got %d", TableType, lastItem.Type())
+					}
+				},
+			)
+		})
 	}
 }
 
 func TestSectionCreateTable(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		headers       []string
+		rows          []TableRow
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			headers:       []string{"cool", "headers"},
+			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			headers:       []string{"cool", "headers"},
+			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			errorMessage:  "",
+			existingItems: 10,
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					table := s.CreateTable(tc.headers)
+
+					for _, row := range tc.rows {
+						table.AddRow(row)
+					}
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != TableType {
+						t.Errorf("Expected error type to be %d got %d", TableType, lastItem.Type())
+					}
+				},
+			)
+		})
 	}
 }
 
