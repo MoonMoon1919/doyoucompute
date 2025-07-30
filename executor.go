@@ -1,6 +1,7 @@
 package doyoucompute
 
 import (
+	"errors"
 	"log"
 	"os"
 	"os/exec"
@@ -32,12 +33,18 @@ func NewTaskRunner() TaskRunner {
 }
 
 func (t TaskRunner) Run(plan CommandPlan) TaskResult {
-	cmd := exec.Command(plan.Args[0], plan.Args[1:]...)
-
 	result := TaskResult{
 		SectionName: plan.Context.Name,
 		Command:     strings.Join(plan.Args, " "),
 	}
+
+	if len(plan.Args) == 0 {
+		result.Error = errors.New("no command specified")
+		result.Status = FAILED
+		return result
+	}
+
+	cmd := exec.Command(plan.Args[0], plan.Args[1:]...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
