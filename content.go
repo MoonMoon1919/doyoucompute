@@ -37,6 +37,7 @@ type MaterializedContent struct {
 	Metadata map[string]interface{}
 }
 
+// MARK: Header
 type Header struct {
 	Content string
 }
@@ -51,6 +52,7 @@ func (h Header) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
+// MARK: Text
 type Text string
 
 func (t Text) Type() ContentType { return TextType }
@@ -63,6 +65,7 @@ func (t Text) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
+// MARK: Link
 type Link struct {
 	Text string
 	Url  string
@@ -80,6 +83,7 @@ func (l Link) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
+// MARK: Code
 type Code string
 
 func (c Code) Type() ContentType {
@@ -93,6 +97,8 @@ func (c Code) Materialize() (MaterializedContent, error) {
 		Metadata: map[string]interface{}{},
 	}, nil
 }
+
+// MARK: Codeblock
 
 // A codeblock is a NON-EXECUTABLE block of code
 // Useful for examples/payloads etc
@@ -115,6 +121,7 @@ func (c CodeBlock) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
+// MARK: BlockQuote
 type BlockQuote string
 
 func (b BlockQuote) Type() ContentType { return BlockQuoteType }
@@ -126,6 +133,8 @@ func (b BlockQuote) Materialize() (MaterializedContent, error) {
 		Metadata: map[string]interface{}{},
 	}, nil
 }
+
+// MARK: Executable
 
 // Script running
 // An executable code block
@@ -148,6 +157,8 @@ func (e Executable) Materialize() (MaterializedContent, error) {
 	}, nil
 }
 
+// MARK: Remote
+
 // Content Sources
 type Remote struct { // e.g., from local file in docs folder, from GitHub.. etc
 	Reader io.Reader
@@ -167,6 +178,8 @@ func (r Remote) Materialize() (MaterializedContent, error) {
 		Metadata: map[string]interface{}{},
 	}, nil
 }
+
+// MARK: TableRow
 
 // TableRow
 type TableRow struct {
