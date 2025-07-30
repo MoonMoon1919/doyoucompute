@@ -1394,3 +1394,253 @@ func TestSectionWriteRemoteContent(t *testing.T) {
 		})
 	}
 }
+
+// MARK: Document
+func TestDocumentAddIntro(t *testing.T) {
+	tests := []struct {
+		name          string
+		introContent  string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Document {
+					document := NewDocument("test")
+
+					for idx := range tc.existingItems {
+						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &document
+				},
+				func(d *Document) ([]Node, error) {
+					introText := NewParagraph().Text(tc.introContent)
+
+					d.AddIntro(introText)
+
+					return d.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, document *Document, t *testing.T) {
+					if len(document.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(document.Content))
+					}
+
+					// Get the first item to ensure it's a paragraph
+					firstItem := result[0]
+					if firstItem.Type() != ParagraphType {
+						t.Errorf("Expected error type to be %d got %d", ParagraphType, firstItem.Type())
+					}
+
+					// Check the content
+					content := firstItem.(*Paragraph).Children()
+
+					if content[0] != Text(tc.introContent) {
+						t.Errorf("Expected content %v, got %v", Text(tc.introContent), content[0])
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestDocumentWriteIntro(t *testing.T) {
+	tests := []struct {
+		name          string
+		introContent  string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			introContent:  "Cool intro",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Document {
+					document := NewDocument("test")
+
+					for idx := range tc.existingItems {
+						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &document
+				},
+				func(d *Document) ([]Node, error) {
+
+					d.WriteIntro().Text(tc.introContent)
+
+					return d.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, document *Document, t *testing.T) {
+					if len(document.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(document.Content))
+					}
+
+					// Get the first item to ensure it's a paragraph
+					firstItem := result[0]
+					if firstItem.Type() != ParagraphType {
+						t.Errorf("Expected error type to be %d got %d", ParagraphType, firstItem.Type())
+					}
+
+					// Check the content
+					content := firstItem.(*Paragraph).Children()
+
+					if content[0] != Text(tc.introContent) {
+						t.Errorf("Expected content %v, got %v", Text(tc.introContent), content[0])
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestDocumentAddSection(t *testing.T) {
+	tests := []struct {
+		name          string
+		sectionName   string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Document {
+					document := NewDocument("test")
+
+					for idx := range tc.existingItems {
+						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &document
+				},
+				func(d *Document) ([]Node, error) {
+					d.AddSection(NewSection(tc.sectionName))
+
+					return d.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, document *Document, t *testing.T) {
+					if len(document.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(document.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(document.Children())-1]
+					if lastItem.Type() != SectionType {
+						t.Errorf("Expected error type to be %d got %d", SectionType, lastItem.Type())
+					}
+
+					if lastItem.(Section).Name != tc.sectionName {
+						t.Errorf("Expected last section to have name %s, got %s", tc.sectionName, lastItem.(Section).Name)
+					}
+				},
+			)
+		})
+	}
+}
+
+func TestDocumentCreateSection(t *testing.T) {
+	tests := []struct {
+		name          string
+		sectionName   string
+		existingItems int
+		errorMessage  string
+	}{
+		{
+			name:          "Passing-NoItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 0,
+		},
+		{
+			name:          "Passing-SomeItems",
+			sectionName:   "Cool section",
+			errorMessage:  "",
+			existingItems: 10,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Document {
+					document := NewDocument("test")
+
+					for idx := range tc.existingItems {
+						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &document
+				},
+				func(d *Document) ([]Node, error) {
+					d.CreateSection(tc.sectionName)
+
+					return d.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, document *Document, t *testing.T) {
+					if len(document.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(document.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(document.Children())-1]
+					if lastItem.Type() != SectionType {
+						t.Errorf("Expected error type to be %d got %d", SectionType, lastItem.Type())
+					}
+
+					if lastItem.(*Section).Name != tc.sectionName {
+						t.Errorf("Expected last section to have name %s, got %s", tc.sectionName, lastItem.(Section).Name)
+					}
+				},
+			)
+		})
+	}
+}
