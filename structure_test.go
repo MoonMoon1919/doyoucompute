@@ -3,6 +3,7 @@ package doyoucompute
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -1085,70 +1086,311 @@ func TestSectionCreateTable(t *testing.T) {
 
 func TestSectionAddList(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		listItems     []Text
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			listItems:     []Text{"Cool item"},
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Passing-SomeItems",
+			listItems:     []Text{"Cool item"},
+			existingItems: 10,
+			errorMessage:  "",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.AddList(BULLET, tc.listItems)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != ListType {
+						t.Errorf("Expected error type to be %d got %d", ListType, lastItem.Type())
+					}
+				},
+			)
+		})
 	}
 }
 
 func TestSectionCreateList(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		listItems     []Text
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			listItems:     []Text{"Cool item"},
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Passing-SomeItems",
+			listItems:     []Text{"Cool item"},
+			existingItems: 10,
+			errorMessage:  "",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					list := s.CreateList(BULLET)
+
+					for _, item := range tc.listItems {
+						list.Append(string(item))
+					}
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != ListType {
+						t.Errorf("Expected error type to be %d got %d", ListType, lastItem.Type())
+					}
+
+					if len(lastItem.(*List).Children()) != len(tc.listItems) {
+						t.Errorf("Expected list to have %d children, found %d", len(tc.listItems), len(lastItem.(*List).Children()))
+					}
+				},
+			)
+		})
 	}
 }
 
 func TestSectionWriteCodeBlock(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		shell         string
+		content       []string
+		executable    CodeBlockExecType
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			shell:         "sh",
+			content:       []string{"echo", "hello", "world"},
+			executable:    Exec,
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Passing-SomeItems",
+			shell:         "sh",
+			content:       []string{"echo", "hello", "world"},
+			executable:    Static,
+			existingItems: 10,
+			errorMessage:  "",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.WriteCodeBlock(tc.shell, tc.content, tc.executable)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+
+					var blockType ContentType
+					if tc.executable == Exec {
+						blockType = ExecutableType
+					} else {
+						blockType = CodeBlockType
+					}
+
+					if lastItem.Type() != blockType {
+						t.Errorf("Expected error type to be %d got %d", blockType, lastItem.Type())
+					}
+				},
+			)
+		})
 	}
 }
 
 func TestSectionWriteBlockQuote(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		quote         string
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			quote:         "Cool quote",
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Passing-SomeItems",
+			quote:         "Cool quote",
+			existingItems: 10,
+			errorMessage:  "",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.WriteBlockQuote(tc.quote)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != BlockQuoteType {
+						t.Errorf("Expected error type to be %d got %d", BlockQuoteType, lastItem.Type())
+					}
+				},
+			)
+		})
 	}
 }
 
 func TestSectionWriteRemoteContent(t *testing.T) {
 	tests := []struct {
-		name string
+		name          string
+		content       string
+		existingItems int
+		errorMessage  string
 	}{
 		{
-			name: "Passing",
+			name:          "Passing-NoItems",
+			content:       "Doot doot",
+			existingItems: 0,
+			errorMessage:  "",
+		},
+		{
+			name:          "Passing-SomeItems",
+			content:       "Doot doot",
+			existingItems: 10,
+			errorMessage:  "",
 		},
 	}
 
 	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {})
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.WriteRemoteContent(Remote{Reader: strings.NewReader(tc.content)})
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != RemoteType {
+						t.Errorf("Expected error type to be %d got %d", RemoteType, lastItem.Type())
+					}
+
+					materialized, err := lastItem.(Remote).Materialize()
+					if err != nil {
+						t.Errorf("Unexpected error %s", err.Error())
+					}
+
+					if materialized.Content != tc.content {
+						t.Errorf("Got content %s, expected %s", materialized.Content, tc.content)
+					}
+				},
+			)
+		})
 	}
 }
