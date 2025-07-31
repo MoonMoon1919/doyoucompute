@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
+	"github.com/MoonMoon1919/doyoucompute/pkg/app"
 )
 
 func manualRoute() doyoucompute.Document {
@@ -108,9 +109,9 @@ func main() {
 	runner := doyoucompute.NewTaskRunner()
 	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
 
-	manualDoc := manualRoute()
+	// manualDoc := manualRoute()
 	builderDoc := builderRoute()
+	app := app.New([]*doyoucompute.Document{&builderDoc}, &svc)
 
-	svc.RenderFile(&manualDoc, "./test.md")
-	svc.ExecuteScript(&builderDoc, doyoucompute.ALL_SECTIONS)
+	app.Run(os.Args)
 }

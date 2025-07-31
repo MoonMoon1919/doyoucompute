@@ -84,7 +84,7 @@ func (s Service) PlanScriptExecution(document *Document, sectionName string) ([]
 	}
 
 	if len(commands) == 0 {
-		return []CommandPlan{}, fmt.Errorf("no executable blocks found for sectio '%s'", sectionName)
+		return []CommandPlan{}, fmt.Errorf("no executable blocks found for section '%s'", sectionName)
 	}
 
 	return commands, nil
