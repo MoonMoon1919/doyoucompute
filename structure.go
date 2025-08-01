@@ -1,5 +1,7 @@
 package doyoucompute
 
+import "errors"
+
 type Table struct {
 	Headers []string
 	Items   []TableRow
@@ -26,8 +28,14 @@ func (t Table) Children() []Node {
 
 func (t Table) Identifer() string { return "" }
 
-func (t *Table) AddRow(row TableRow) {
-	t.Items = append(t.Items, row)
+func (t *Table) AddRow(row ...string) error {
+	if len(row) > len(t.Headers) {
+		return errors.New("Row length exceeds number of headers")
+	}
+
+	t.Items = append(t.Items, TableRow{Values: row})
+
+	return nil
 }
 
 // A container that allows us to render content with list semantics (optionally ordered)

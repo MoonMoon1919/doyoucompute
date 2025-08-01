@@ -31,17 +31,30 @@ func TestTableAddRow(t *testing.T) {
 	tests := []struct {
 		name         string
 		numItems     int
+		header       []string
+		row          []string
 		errorMessage string
 	}{
 		{
 			name:         "Pass-HasRows",
 			numItems:     10,
+			header:       []string{"dude", "sweet"},
+			row:          []string{"mine", "says"},
 			errorMessage: "",
 		},
 		{
 			name:         "Pass-NoRows",
 			numItems:     0,
+			header:       []string{"dude", "sweet"},
+			row:          []string{"mine", "says"},
 			errorMessage: "",
+		},
+		{
+			name:         "Fail-RowTooLong",
+			numItems:     0,
+			header:       []string{"dude", "sweet"},
+			row:          []string{"what", "does", "mine", "say"},
+			errorMessage: "Row length exceeds number of headers",
 		},
 	}
 
@@ -50,20 +63,26 @@ func TestTableAddRow(t *testing.T) {
 			testOperation(
 				t,
 				func() *Table {
-					table := NewTable([]string{"cool", "header"}, []TableRow{})
+					table := NewTable(tc.header, []TableRow{})
 
 					return table
 				},
 				func(table *Table) ([]TableRow, error) {
-					for idx := range tc.numItems {
-						table.AddRow(TableRow{Values: []string{"sweet", fmt.Sprintf("%d", idx)}})
+					// Add the header as a row because it will
+					// have the correct number of columns
+					for range tc.numItems {
+						table.AddRow(tc.header...)
+					}
+
+					if err := table.AddRow(tc.row...); err != nil {
+						return table.Items, err
 					}
 
 					return table.Items, nil
 				},
 				tc.errorMessage,
 				func(rows []TableRow, table *Table, t *testing.T) {
-					if len(table.Items) != tc.numItems {
+					if len(table.Items) != tc.numItems+1 {
 						t.Errorf("Expected %d items, found %d", tc.numItems, len(table.Items))
 					}
 				},
@@ -84,9 +103,7 @@ func TestTableChildren(t *testing.T) {
 			setupFunc: func() *Table {
 				table := NewTable([]string{"some", "cool", "headers"}, []TableRow{})
 
-				table.AddRow(TableRow{
-					Values: []string{"a", "cool", "value"},
-				})
+				table.AddRow("a", "cool", "value")
 
 				return table
 			},
@@ -1025,21 +1042,21 @@ func TestSectionCreateTable(t *testing.T) {
 	tests := []struct {
 		name          string
 		headers       []string
-		rows          []TableRow
+		rows          [][]string
 		existingItems int
 		errorMessage  string
 	}{
 		{
 			name:          "Passing-NoItems",
 			headers:       []string{"cool", "headers"},
-			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			rows:          [][]string{{"cool", "value"}},
 			errorMessage:  "",
 			existingItems: 0,
 		},
 		{
 			name:          "Passing-SomeItems",
 			headers:       []string{"cool", "headers"},
-			rows:          []TableRow{{Values: []string{"cool", "value"}}},
+			rows:          [][]string{{"cool", "value"}},
 			errorMessage:  "",
 			existingItems: 10,
 		},
@@ -1062,7 +1079,7 @@ func TestSectionCreateTable(t *testing.T) {
 					table := s.CreateTable(tc.headers)
 
 					for _, row := range tc.rows {
-						table.AddRow(row)
+						table.AddRow(row...)
 					}
 
 					return s.Children(), nil

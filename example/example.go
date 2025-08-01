@@ -90,9 +90,9 @@ func builderRoute() doyoucompute.Document {
 	table := section.CreateTable(
 		[]string{"my", "cool", "table"},
 	)
-	table.AddRow(doyoucompute.TableRow{Values: []string{"some", "cool", "content"}})
-	table.AddRow(doyoucompute.TableRow{Values: []string{"more", "nice", "stuff"}})
-	table.AddRow(doyoucompute.TableRow{Values: []string{"very", "great", "table"}})
+	table.AddRow("some", "cool", "content")
+	table.AddRow("more", "nice", "stuff")
+	table.AddRow("very", "great", "table")
 
 	// List
 	list := section.CreateList(doyoucompute.NUMBERED)
