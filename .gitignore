@@ -1,6 +1,5 @@
 # This file was automatically generated, do not make manual edits
 
-testdocs/**
 example/*.md
 example/example
 **dycoctl
