@@ -11,7 +11,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func cliBuilder(service *doyoucompute.Service, documents map[string]*doyoucompute.Document) *cli.Command {
+func cliBuilder(cliName string, service *doyoucompute.Service, documents map[string]*doyoucompute.Document) *cli.Command {
 	findDoc := func(documentName string) (*doyoucompute.Document, error) {
 		doc, ok := documents[documentName]
 
@@ -23,8 +23,8 @@ func cliBuilder(service *doyoucompute.Service, documents map[string]*doyoucomput
 	}
 
 	cmd := &cli.Command{
-		Name:  "dycoctl",
-		Usage: "CLI for doyoucompute",
+		Name:  cliName,
+		Usage: "CLI for generating and running docs",
 		Commands: []*cli.Command{
 			{
 				Name:  "render",
@@ -197,7 +197,7 @@ func New(documents []*doyoucompute.Document, service *doyoucompute.Service) *app
 }
 
 func (a *app) Run(args []string) error {
-	cli := cliBuilder(a.service, a.documents)
+	cli := cliBuilder("dycoctl", a.service, a.documents)
 
 	if err := cli.Run(context.Background(), args); err != nil {
 		return err
