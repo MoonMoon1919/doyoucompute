@@ -154,6 +154,24 @@ func cliBuilder(service *doyoucompute.Service, documents map[string]*doyoucomput
 					return nil
 				},
 			},
+			{
+				Name:  "list",
+				Usage: "List all available docs",
+				Action: func(ctx context.Context, c *cli.Command) error {
+					if len(documents) == 0 {
+						return errors.New("no documents found")
+					}
+
+					fmt.Print("Documents\n")
+					fmt.Print("---------\n")
+					for docName := range documents {
+						fmt.Print(docName)
+						fmt.Print("\n")
+					}
+
+					return nil
+				},
+			},
 		},
 	}
 
