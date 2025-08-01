@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - ".gitignore"
+  push:
+    branches:
+      - 'main'
+    paths-ignore:
+      - '**/*.md'
+      - 'LICENSE'
+      - ".gitignore"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: fmt
+        run: make fmt
+
+      - name: vet
+        run: make vet
+
+      - name: unit test
+        run: make test/unit
