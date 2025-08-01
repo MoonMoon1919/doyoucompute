@@ -24,7 +24,7 @@ func cliBuilder(service *doyoucompute.Service, documents map[string]*doyoucomput
 
 	cmd := &cli.Command{
 		Name:  "dycoctl",
-		Usage: "CLI application for doyoucompute",
+		Usage: "CLI for doyoucompute",
 		Commands: []*cli.Command{
 			{
 				Name:  "render",
