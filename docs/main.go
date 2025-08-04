@@ -18,8 +18,9 @@ func main() {
 	readme := documents.Readme()
 	contribution := documents.Contributing()
 	bugreport := documents.BugReport()
+	pullrequest := documents.PullRequest()
 
-	app := app.New([]*doyoucompute.Document{&readme, &contribution, &bugreport}, &svc)
+	app := app.New([]*doyoucompute.Document{&readme, &contribution, &bugreport, &pullrequest}, &svc)
 
 	app.Run(os.Args)
 }
