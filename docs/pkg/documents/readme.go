@@ -1,11 +1,6 @@
-package main
+package documents
 
-import (
-	"os"
-
-	"github.com/MoonMoon1919/doyoucompute"
-	"github.com/MoonMoon1919/doyoucompute/pkg/app"
-)
+import "github.com/MoonMoon1919/doyoucompute"
 
 func cliSection() doyoucompute.Section {
 	cliSection := doyoucompute.NewSection("CLI Usage")
@@ -126,7 +121,7 @@ func quickstartSection() doyoucompute.Section {
 	return quickStartSection
 }
 
-func readme() doyoucompute.Document {
+func Readme() doyoucompute.Document {
 	document := doyoucompute.NewDocument("DOYOUCOMPUTE")
 	document.WriteIntro().
 		Text("A lightweight framework for creating runnable documentation.").
@@ -160,18 +155,4 @@ func readme() doyoucompute.Document {
 		Text("for details.")
 
 	return document
-}
-
-func main() {
-	repo := doyoucompute.NewFileRepository()
-	fileRenderer := doyoucompute.NewMarkdownRenderer()
-	execRenderer := doyoucompute.NewExecutionRenderer()
-	runner := doyoucompute.NewTaskRunner()
-	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
-
-	readme := readme()
-
-	app := app.New([]*doyoucompute.Document{&readme}, &svc)
-
-	app.Run(os.Args)
 }
