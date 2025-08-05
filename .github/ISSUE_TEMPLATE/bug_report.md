@@ -1,3 +1,12 @@
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
 # Bug Report
 
 ## Expected behavior
@@ -10,9 +19,9 @@ What actually happens?
 
 ## Steps to reproduce
 
-1. 
-1. 
-1. 
+1.
+1.
+1.
 
 
 ## Environment details
