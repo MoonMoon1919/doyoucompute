@@ -125,7 +125,7 @@ func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string,
 	return builder.String(), nil
 }
 
-func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) (string, error) {
+func (m Markdown) renderSection(s Structurer, contextPath *ContextPath) (string, error) {
 	ctxPath := contextPath.Push(s.Identifer())
 	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
 
@@ -226,7 +226,7 @@ func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *Con
 	case DocumentType:
 		return m.renderDocument(structureNode.(*Document), contextPath)
 	case SectionType:
-		return m.renderHeaderedPortion(structureNode, contextPath)
+		return m.renderSection(structureNode, contextPath)
 	case ParagraphType:
 		return m.renderParagraph(structureNode, contextPath)
 	case ListType:
