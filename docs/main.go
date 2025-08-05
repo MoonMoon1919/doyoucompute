@@ -15,12 +15,18 @@ func main() {
 	runner := doyoucompute.NewTaskRunner()
 	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
 
+	// Docs to register
+	app := app.New(&svc)
+
 	readme := documents.Readme()
 	contribution := documents.Contributing()
 	bugreport := documents.BugReport()
 	pullrequest := documents.PullRequest()
 
-	app := app.New([]*doyoucompute.Document{&readme, &contribution, &bugreport, &pullrequest}, &svc)
+	app.Register(readme)
+	app.Register(contribution)
+	app.Register(bugreport)
+	app.Register(pullrequest)
 
 	app.Run(os.Args)
 }

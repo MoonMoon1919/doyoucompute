@@ -111,7 +111,8 @@ func main() {
 
 	// manualDoc := manualRoute()
 	builderDoc := builderRoute()
-	app := app.New([]*doyoucompute.Document{&builderDoc}, &svc)
+	app := app.New(&svc)
+	app.Register(builderDoc)
 
 	app.Run(os.Args)
 }

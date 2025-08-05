@@ -11,12 +11,12 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func cliBuilder(cliName string, service *doyoucompute.Service, documents map[string]*doyoucompute.Document) *cli.Command {
-	findDoc := func(documentName string) (*doyoucompute.Document, error) {
+func cliBuilder(cliName string, service *doyoucompute.Service, documents map[string]doyoucompute.Document) *cli.Command {
+	findDoc := func(documentName string) (doyoucompute.Document, error) {
 		doc, ok := documents[documentName]
 
 		if !ok {
-			return nil, errors.New("document not found")
+			return doyoucompute.Document{}, errors.New("document not found")
 		}
 
 		return doc, nil
@@ -49,7 +49,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return err
 					}
 
-					if err := service.RenderFile(document, outpath); err != nil {
+					if err := service.RenderFile(&document, outpath); err != nil {
 						return err
 					}
 
@@ -79,7 +79,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return err
 					}
 
-					if result, err := service.CompareFile(document, outpath); err != nil {
+					if result, err := service.CompareFile(&document, outpath); err != nil {
 						return err
 					} else {
 						if !result.Matches {
@@ -113,7 +113,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return err
 					}
 
-					if _, err := service.ExecuteScript(document, section); err != nil {
+					if _, err := service.ExecuteScript(&document, section); err != nil {
 						return err
 					}
 
@@ -143,7 +143,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return err
 					}
 
-					if results, err := service.PlanScriptExecution(document, section); err != nil {
+					if results, err := service.PlanScriptExecution(&document, section); err != nil {
 						return err
 					} else {
 						for _, result := range results {
@@ -179,21 +179,19 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 }
 
 type app struct {
-	documents map[string]*doyoucompute.Document
+	documents map[string]doyoucompute.Document
 	service   *doyoucompute.Service
 }
 
-func New(documents []*doyoucompute.Document, service *doyoucompute.Service) *app {
-	documentMap := map[string]*doyoucompute.Document{}
-
-	for _, document := range documents {
-		documentMap[document.Name] = document
-	}
-
+func New(service *doyoucompute.Service) *app {
 	return &app{
-		documents: documentMap,
+		documents: map[string]doyoucompute.Document{},
 		service:   service,
 	}
+}
+
+func (a *app) Register(document doyoucompute.Document) {
+	a.documents[document.Name] = document
 }
 
 func (a *app) Run(args []string) error {
