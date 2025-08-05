@@ -22,6 +22,7 @@ const (
 	ParagraphType
 	SectionType
 	DocumentType
+	FrontmatterType
 )
 
 type CodeBlockExecType int // this name is awful

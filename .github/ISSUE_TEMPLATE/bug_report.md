@@ -1,9 +1,9 @@
 ---
+about: Report a bug
+assignees: ""
+labels: ""
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+title: ""
 
 ---
 
@@ -19,9 +19,9 @@ What actually happens?
 
 ## Steps to reproduce
 
-1.
-1.
-1.
+1. 
+1. 
+1. 
 
 
 ## Environment details

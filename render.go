@@ -3,6 +3,8 @@ package doyoucompute
 import (
 	"errors"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Renderer[T any] interface {
@@ -88,6 +90,41 @@ func (m Markdown) renderParagraph(p Structurer, contextPath *ContextPath) (strin
 	return builder.String(), nil
 }
 
+func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string, error) {
+	ctxPath := contextPath.Push(d.Identifer())
+	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
+
+	childContent, err := m.renderChildren(d.Children(), contextPath)
+	if err != nil {
+		return "", err
+	}
+
+	var builder strings.Builder
+
+	// Don't exceed an H5
+	level := ctxPath.CurrentLevel()
+	if ctxPath.CurrentLevel() > 5 {
+		level = 5
+	}
+
+	if d.Frontmatter.Data != nil {
+		frontmatter, err := m.renderFrontmatter(d.Frontmatter)
+		if err != nil {
+			return "", err
+		}
+
+		builder.WriteString(frontmatter)
+	}
+
+	m.writeHeader(&builder, d.Identifer(), level)
+	builder.WriteString(strings.Join(childContent, "\n\n"))
+
+	// Final newline
+	builder.WriteString("\n")
+
+	return builder.String(), nil
+}
+
 func (m Markdown) renderHeaderedPortion(s Structurer, contextPath *ContextPath) (string, error) {
 	ctxPath := contextPath.Push(s.Identifer())
 	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
@@ -168,10 +205,26 @@ func (m Markdown) renderList(l *List, contextPath *ContextPath) (string, error) 
 	return builder.String(), nil
 }
 
+func (m Markdown) renderFrontmatter(f Frontmatter) (string, error) {
+	var builder strings.Builder
+
+	builder.WriteString("---\n")
+
+	data, err := yaml.Marshal(f.Data)
+	if err != nil {
+		return "", err
+	}
+	builder.Write(data)
+	builder.WriteString("\n")
+	builder.WriteString("---\n\n")
+
+	return builder.String(), nil
+}
+
 func (m Markdown) renderStructureNode(structureNode Structurer, contextPath *ContextPath) (string, error) {
 	switch structureNode.Type() {
 	case DocumentType:
-		return m.renderHeaderedPortion(structureNode, contextPath)
+		return m.renderDocument(structureNode.(*Document), contextPath)
 	case SectionType:
 		return m.renderHeaderedPortion(structureNode, contextPath)
 	case ParagraphType:
@@ -312,7 +365,7 @@ func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath)
 
 func (m Markdown) renderWithTracking(node Node, contextPath *ContextPath) (string, error) {
 	switch node.Type() {
-	case DocumentType, SectionType, ParagraphType, ListType, TableType:
+	case DocumentType, SectionType, ParagraphType, ListType, TableType, FrontmatterType:
 		return m.renderStructureNode(node.(Structurer), contextPath)
 	default: // let the content renderer check through an error for invalid type
 		return m.renderContent(node.(Contenter), contextPath)

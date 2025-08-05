@@ -59,13 +59,13 @@ func TestMarkdownRender(t *testing.T) {
 					},
 				},
 			},
-			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n\n## Quick Start\n\n### Prerequisites\n\nProbably go\n\n## Long version\n\nvery long version",
+			expected: "# MyDoc\n\n## INTRO\n\nThis is an introduction. And another sentence here.\n\nhey im some remote content\n\n## Quick Start\n\n### Prerequisites\n\nProbably go\n\n## Long version\n\nvery long version\n",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			content, err := tc.renderer.Render(tc.document)
+			content, err := tc.renderer.Render(&tc.document)
 
 			var errMsg string
 			if err != nil {

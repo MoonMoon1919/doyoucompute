@@ -2,6 +2,16 @@ package doyoucompute
 
 import "errors"
 
+type Frontmatter struct {
+	Data map[string]interface{}
+}
+
+func NewFrontmatter(data map[string]interface{}) *Frontmatter {
+	return &Frontmatter{
+		Data: data,
+	}
+}
+
 type Table struct {
 	Headers []string
 	Items   []TableRow
@@ -238,8 +248,9 @@ func (s *Section) WriteRemoteContent(remote Remote) {
 
 // A document contains many sections
 type Document struct {
-	Name    string
-	Content []Node // Preferably Paragraph and Section
+	Name        string
+	Frontmatter Frontmatter
+	Content     []Node // Preferably Paragraph and Section
 }
 
 func NewDocument(name string) Document {
@@ -257,6 +268,10 @@ func (d Document) Identifer() string { return d.Name }
 
 func (d *Document) AddIntro(content *Paragraph) {
 	d.Content = append([]Node{content}, d.Content...)
+}
+
+func (d *Document) AddFrontmatter(f Frontmatter) {
+	d.Frontmatter = f
 }
 
 func (d *Document) WriteIntro() *Paragraph {
