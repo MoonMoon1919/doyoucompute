@@ -18,15 +18,10 @@ func main() {
 	// Docs to register
 	app := app.New(&svc)
 
-	readme := documents.Readme()
-	contribution := documents.Contributing()
-	bugreport := documents.BugReport()
-	pullrequest := documents.PullRequest()
-
-	app.Register(readme)
-	app.Register(contribution)
-	app.Register(bugreport)
-	app.Register(pullrequest)
+	app.Register(documents.Readme())
+	app.Register(documents.Contributing())
+	app.Register(documents.BugReport())
+	app.Register(documents.PullRequest())
 
 	app.Run(os.Args)
 }

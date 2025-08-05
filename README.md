@@ -72,11 +72,6 @@ func createReadmeDoc() doyoucompute.Document {
 }
 
 func main() {
-    // Define your documents
-    documents := []*doyoucompute.Document{
-        createReadmeDoc(),
-    }
-
     // Create service with file repository and task runner
     repo := doyoucompute.NewFileRepository()
     runner := doyoucompute.NewTaskRunner()
@@ -86,7 +81,9 @@ func main() {
     service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
 
     // Create and run CLI app
-    app := app.New(documents, service)
+    app := app.New(service)
+	app.Register(createReadmeDoc())
+
     if err := app.Run(os.Args); err != nil {
         panic(err)
     }
