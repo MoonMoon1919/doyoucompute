@@ -35,7 +35,7 @@ func main() {
 
     // Create and run CLI app
     app := app.New(service)
-	app.Register(createReadmeDoc())
+    app.Register(createReadmeDoc())
 
     if err := app.Run(os.Args); err != nil {
         panic(err)
