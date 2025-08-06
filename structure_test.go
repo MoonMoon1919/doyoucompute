@@ -166,7 +166,7 @@ func TestTableType(t *testing.T) {
 func TestTableIdentifier(t *testing.T) {
 	table := NewTable([]string{"cool", "table"}, []TableRow{{Values: []string{"sweet", "value"}}})
 
-	if table.Identifer() != "" {
+	if table.Identifier() != "" {
 		t.Errorf("Expected no table identifiers")
 	}
 }
@@ -336,10 +336,10 @@ func TestListAppend(t *testing.T) {
 	}
 }
 
-func TestListIdentifer(t *testing.T) {
+func TestListIdentifier(t *testing.T) {
 	list := NewList(BULLET)
 
-	if list.Identifer() != "" {
+	if list.Identifier() != "" {
 		t.Error("Expected list identifier to be empty")
 	}
 }

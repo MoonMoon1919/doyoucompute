@@ -91,7 +91,7 @@ func (m Markdown) renderParagraph(p Structurer, contextPath *ContextPath) (strin
 }
 
 func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string, error) {
-	ctxPath := contextPath.Push(d.Identifer())
+	ctxPath := contextPath.Push(d.Identifier())
 	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
 
 	childContent, err := m.renderChildren(d.Children(), contextPath)
@@ -116,7 +116,7 @@ func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string,
 		builder.WriteString(frontmatter)
 	}
 
-	m.writeHeader(&builder, d.Identifer(), level)
+	m.writeHeader(&builder, d.Identifier(), level)
 	builder.WriteString(strings.Join(childContent, "\n\n"))
 
 	// Final newline
@@ -126,7 +126,7 @@ func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string,
 }
 
 func (m Markdown) renderSection(s Structurer, contextPath *ContextPath) (string, error) {
-	ctxPath := contextPath.Push(s.Identifer())
+	ctxPath := contextPath.Push(s.Identifier())
 	contextPath = &ctxPath // Update the context path so as we walk the tree we correctly track header level
 
 	childContent, err := m.renderChildren(s.Children(), contextPath)
@@ -142,7 +142,7 @@ func (m Markdown) renderSection(s Structurer, contextPath *ContextPath) (string,
 		level = 5
 	}
 
-	m.writeHeader(&builder, s.Identifer(), level)
+	m.writeHeader(&builder, s.Identifier(), level)
 	builder.WriteString(strings.Join(childContent, "\n\n"))
 
 	return builder.String(), nil
@@ -417,7 +417,7 @@ func (e Executioner) renderChildren(node Structurer, contextPath *ContextPath) (
 }
 
 func (e Executioner) renderStructureNode(node Structurer, contextPath *ContextPath) ([]CommandPlan, error) {
-	ctxPath := contextPath.Push(node.Identifer())
+	ctxPath := contextPath.Push(node.Identifier())
 
 	return e.renderChildren(node, &ctxPath)
 }

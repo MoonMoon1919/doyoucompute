@@ -20,6 +20,6 @@ type Contenter interface {
 
 type Structurer interface {
 	Node
-	Identifer() string
+	Identifier() string
 	Children() []Node
 }

@@ -58,8 +58,8 @@ func (t Table) Children() []Node {
 	return nodes
 }
 
-// Identifer returns an empty string as tables do not have specific identifiers.
-func (t Table) Identifer() string { return "" }
+// Identifier returns an empty string as tables do not have specific identifiers.
+func (t Table) Identifier() string { return "" }
 
 // AddRow appends a new row to the table with the provided column values.
 // Returns an error if the number of values exceeds the number of headers.
@@ -130,8 +130,8 @@ func (l List) Children() []Node {
 	return nodes
 }
 
-// Identifer returns an empty string as lists do not have specific identifiers.
-func (l List) Identifer() string { return "" }
+// Identifier returns an empty string as lists do not have specific identifiers.
+func (l List) Identifier() string { return "" }
 
 // Push adds a new item to the beginning of the list.
 func (l *List) Push(val string) {
@@ -165,8 +165,8 @@ func (p Paragraph) Type() ContentType { return ParagraphType }
 // Children returns all items within the paragraph as Node interfaces.
 func (p Paragraph) Children() []Node { return p.Items }
 
-// Identifer returns an empty string as paragraphs do not have specific identifiers.
-func (p Paragraph) Identifer() string { return "" }
+// Identifier returns an empty string as paragraphs do not have specific identifiers.
+func (p Paragraph) Identifier() string { return "" }
 
 // Text adds a text element to the paragraph and returns the paragraph for method chaining.
 func (p *Paragraph) Text(val string) *Paragraph {
@@ -214,8 +214,8 @@ func (s Section) Children() []Node { return s.Content }
 // Type returns the ContentType for this section element.
 func (s Section) Type() ContentType { return SectionType }
 
-// Identifer returns the section name as its identifier.
-func (s Section) Identifer() string { return s.Name }
+// Identifier returns the section name as its identifier.
+func (s Section) Identifier() string { return s.Name }
 
 // AddIntro prepends a paragraph to the beginning of the section content.
 func (s *Section) AddIntro(content *Paragraph) {
@@ -353,8 +353,8 @@ func (d Document) Type() ContentType { return DocumentType }
 // Children returns all content within the document as Node interfaces.
 func (d Document) Children() []Node { return d.Content }
 
-// Identifer returns the document name as its identifier.
-func (d Document) Identifer() string { return d.Name }
+// Identifier returns the document name as its identifier.
+func (d Document) Identifier() string { return d.Name }
 
 // AddIntro prepends a paragraph to the beginning of the document content.
 func (d *Document) AddIntro(content *Paragraph) {
