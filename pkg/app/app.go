@@ -82,6 +82,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 					if result, err := service.CompareFile(&document, outpath); err != nil {
 						return err
 					} else {
+
 						if !result.Matches {
 							return fmt.Errorf("Results do not match, file hash %s, content hash %s", result.FileHash, result.DocumentHash)
 						}
@@ -162,8 +163,6 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return errors.New("no documents found")
 					}
 
-					fmt.Print("Documents\n")
-					fmt.Print("---------\n")
 					for docName := range documents {
 						fmt.Print(docName)
 						fmt.Print("\n")
@@ -198,7 +197,7 @@ func (a *app) Run(args []string) error {
 	cli := cliBuilder("dycoctl", a.service, a.documents)
 
 	if err := cli.Run(context.Background(), args); err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	return nil

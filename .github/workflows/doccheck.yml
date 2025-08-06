@@ -1,0 +1,47 @@
+name: doccheck
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+  push:
+    branches:
+      - "main"
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Check README
+        working-directory: ./docs
+        run: |
+          go run main.go compare --doc-name 'DOYOUCOMPUTE' --path ../README.md
+
+      - name: Check bug report issue template
+        working-directory: ./docs
+        run: |
+          go run main.go compare --doc-name 'Bug Report' --path ../.github/ISSUE_TEMPLATE/bug_report.md
+
+      - name: Check PR template
+        working-directory: ./docs
+        run: |
+          go run main.go compare --doc-name 'Pull request template' --path ../.github/PULL_REQUEST_TEMPLATE.md
+
+      - name: Check Contributing
+        working-directory: ./docs
+        run: |
+          go run main.go compare --doc-name 'Contributing' --path ../CONTRIBUTING.md
+
