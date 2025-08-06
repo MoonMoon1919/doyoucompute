@@ -12,6 +12,8 @@ import (
 )
 
 func cliBuilder(cliName string, service *doyoucompute.Service, documents map[string]doyoucompute.Document) *cli.Command {
+	// helper function that looks up a document by name from the registered documents map.
+	// returns an error if the document is not found.
 	findDoc := func(documentName string) (doyoucompute.Document, error) {
 		doc, ok := documents[documentName]
 
@@ -182,6 +184,8 @@ type app struct {
 	service   *doyoucompute.Service
 }
 
+// New creates a new CLI application instance with the provided service and
+// an empty document registry.
 func New(service *doyoucompute.Service) *app {
 	return &app{
 		documents: map[string]doyoucompute.Document{},
@@ -189,10 +193,14 @@ func New(service *doyoucompute.Service) *app {
 	}
 }
 
+// Register adds a document to the application's registry, making it available
+// for CLI operations. The document is indexed by its Name field.
 func (a *app) Register(document doyoucompute.Document) {
 	a.documents[document.Name] = document
 }
 
+// Run executes the CLI application with the provided command-line arguments.
+// This is the main entry point for the CLI functionality.
 func (a *app) Run(args []string) error {
 	cli := cliBuilder("dycoctl", a.service, a.documents)
 

@@ -7,23 +7,38 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// Renderer defines a generic interface for converting Node elements into different output formats.
+// The type parameter T allows for different renderers to produce different output types
+// (e.g., string for markdown, []CommandPlan for execution planning).
 type Renderer[T any] interface {
+	// Render processes a node and converts it to the target format T.
+	// Returns an error if the rendering process fails.
 	Render(node Node) (T, error)
 }
 
 // MARK: Tracking
+
+// SectionInfo contains metadata about a section's position within the document hierarchy.
 type SectionInfo struct {
-	Name  string
+	// Name is the identifier of the section
+	Name string
+	// Level indicates the nesting depth of the section (1 for top-level, 2 for subsection, etc.)
 	Level int
 }
 
+// ContextPath represents a stack of section information that tracks the current
+// position within a nested document structure during traversal or rendering.
 type ContextPath []SectionInfo
 
+// Push adds a new section to the context path and returns the updated path.
+// The level is automatically calculated based on the current depth.
 func (c ContextPath) Push(name string) ContextPath {
 	level := len(c) + 1
 	return append(c, SectionInfo{Name: name, Level: level})
 }
 
+// Current returns the SectionInfo for the current (most recent) section.
+// Returns an empty SectionInfo if the path is empty.
 func (c ContextPath) Current() SectionInfo {
 	if len(c) == 0 {
 		return SectionInfo{}
@@ -32,6 +47,8 @@ func (c ContextPath) Current() SectionInfo {
 	return c[len(c)-1]
 }
 
+// CurrentSection returns the name of the current section.
+// Returns an empty string if no sections are in the path.
 func (c ContextPath) CurrentSection() string {
 	if len(c) == 0 {
 		return ""
@@ -40,6 +57,8 @@ func (c ContextPath) CurrentSection() string {
 	return c.Current().Name
 }
 
+// CurrentLevel returns the nesting level of the current section.
+// Returns -1 if no sections are in the path.
 func (c ContextPath) CurrentLevel() int {
 	if len(c) == 0 {
 		return -1
@@ -49,8 +68,12 @@ func (c ContextPath) CurrentLevel() int {
 }
 
 // MARK: Markdown
+
+// Markdown implements the Renderer interface to convert document nodes into markdown format.
+// It handles hierarchical document structures and maintains proper heading levels during traversal.
 type Markdown struct{}
 
+// NewMarkdownRenderer creates a new Markdown renderer instance.
 func NewMarkdownRenderer() Markdown {
 	return Markdown{}
 }
@@ -384,19 +407,30 @@ func (m Markdown) renderWithTracking(node Node, contextPath *ContextPath) (strin
 	}
 }
 
+// Render converts a document node into markdown format, starting with an empty context path.
+// This is the main entry point for the Renderer interface implementation.
 func (m Markdown) Render(node Node) (string, error) {
 	return m.renderWithTracking(node, &ContextPath{})
 }
 
 // MARK: Executor
+
+// CommandPlan represents a single executable command with its context information,
+// used for planning and executing runnable documentation scripts.
 type CommandPlan struct {
-	Shell   string
-	Args    []string
+	// Shell specifies the shell or interpreter to use for execution
+	Shell string
+	// Args contains the command and its arguments to be executed
+	Args []string
+	// Context provides information about which section this command originated from
 	Context SectionInfo
 }
 
+// Executioner implements the Renderer interface to extract executable commands
+// from document nodes and create execution plans for runnable documentation.
 type Executioner struct{}
 
+// NewExecutionRenderer creates a new Executioner instance for building command execution plans.
 func NewExecutionRenderer() Executioner {
 	return Executioner{}
 }
@@ -465,6 +499,9 @@ func (e Executioner) renderWithTracking(node Node, contextPath *ContextPath) ([]
 	return commands, nil
 }
 
+// Render traverses a document node and extracts all executable commands,
+// returning them as a slice of CommandPlan for execution planning.
+// This is the main entry point for the Renderer interface implementation.
 func (e Executioner) Render(node Node) ([]CommandPlan, error) {
 	cmds, err := e.renderWithTracking(node, &ContextPath{})
 	if err != nil {
