@@ -107,7 +107,7 @@ func (m Markdown) renderDocument(d *Document, contextPath *ContextPath) (string,
 		level = 5
 	}
 
-	if d.Frontmatter.Data != nil {
+	if d.HasFrontmatter() {
 		frontmatter, err := m.renderFrontmatter(d.Frontmatter)
 		if err != nil {
 			return "", err

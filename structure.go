@@ -1,6 +1,8 @@
 package doyoucompute
 
-import "errors"
+import (
+	"errors"
+)
 
 type Frontmatter struct {
 	Data map[string]interface{}
@@ -10,6 +12,10 @@ func NewFrontmatter(data map[string]interface{}) *Frontmatter {
 	return &Frontmatter{
 		Data: data,
 	}
+}
+
+func (f *Frontmatter) Empty() bool {
+	return len(f.Data) == 0
 }
 
 type Table struct {
@@ -276,6 +282,18 @@ func (d *Document) AddIntro(content *Paragraph) {
 
 func (d *Document) AddFrontmatter(f Frontmatter) {
 	d.Frontmatter = f
+}
+
+func (d *Document) HasFrontmatter() bool {
+	if d.Frontmatter.Data != nil {
+		return true
+	}
+
+	if !d.Frontmatter.Empty() {
+		return true
+	}
+
+	return false
 }
 
 func (d *Document) WriteIntro() *Paragraph {

@@ -1713,3 +1713,35 @@ func TestDocumentCreateSection(t *testing.T) {
 		})
 	}
 }
+
+func TestDocumentAddFrontmatter(t *testing.T) {
+	tests := []struct {
+		name         string
+		content      Frontmatter
+		errorMessage string
+	}{}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Document {
+					document := NewDocument("test")
+
+					return &document
+				},
+				func(d *Document) (Frontmatter, error) {
+					d.AddFrontmatter(tc.content)
+
+					return d.Frontmatter, nil
+				},
+				tc.errorMessage,
+				func(result Frontmatter, document *Document, t *testing.T) {
+					if document.Frontmatter.Data == nil {
+						t.Errorf("Frontmatter is empty, expected to have content")
+					}
+				},
+			)
+		})
+	}
+}
