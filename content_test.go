@@ -357,3 +357,36 @@ func TestTableRowMaterialize(t *testing.T) {
 		})
 	}
 }
+
+func TestCommmentMaterialize(t *testing.T) {
+	tests := []struct {
+		name         string
+		content      string
+		errorMessage string
+	}{
+		{
+			name: "Passing",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testMaterialize(
+				t,
+				func() Contenter {
+					return Comment(tc.content)
+				},
+				tc.errorMessage,
+				func(m MaterializedContent, t *testing.T) {
+					if m.Type != CommentType {
+						t.Errorf("Expected Type to be %d, got %d", CommentType, m.Type)
+					}
+
+					if m.Content != tc.content {
+						t.Errorf("Expected content to be %s, got %s", tc.content, m.Content)
+					}
+				},
+			)
+		})
+	}
+}

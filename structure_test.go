@@ -1412,6 +1412,58 @@ func TestSectionWriteRemoteContent(t *testing.T) {
 	}
 }
 
+func TestSectionWriteComment(t *testing.T) {
+	tests := []struct {
+		name          string
+		content       string
+		existingItems int
+		errorMessage  string
+	}{}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			testOperation(
+				t,
+				func() *Section {
+					section := NewSection("test")
+
+					for idx := range tc.existingItems {
+						section.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
+					}
+
+					return &section
+				},
+				func(s *Section) ([]Node, error) {
+					s.WriteComment(tc.content)
+
+					return s.Children(), nil
+				},
+				tc.errorMessage,
+				func(result []Node, section *Section, t *testing.T) {
+					if len(section.Content) != tc.existingItems+1 {
+						t.Errorf("Expected %d children, found %d", tc.existingItems+1, len(section.Content))
+					}
+
+					// Get the last item to ensure it's a section
+					lastItem := result[len(section.Children())-1]
+					if lastItem.Type() != CommentType {
+						t.Errorf("Expected error type to be %d got %d", CommentType, lastItem.Type())
+					}
+
+					materialized, err := lastItem.(Comment).Materialize()
+					if err != nil {
+						t.Errorf("Unexpected error %s", err.Error())
+					}
+
+					if materialized.Content != tc.content {
+						t.Errorf("Got content %s, expected %s", materialized.Content, tc.content)
+					}
+				},
+			)
+		})
+	}
+}
+
 // MARK: Document
 func TestDocumentAddIntro(t *testing.T) {
 	tests := []struct {
