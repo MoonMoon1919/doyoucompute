@@ -333,6 +333,16 @@ func (m Markdown) renderRemoteContent(content MaterializedContent) (string, erro
 	return builder.String(), nil
 }
 
+func (m Markdown) renderComment(content MaterializedContent) (string, error) {
+	var builder strings.Builder
+
+	builder.WriteString("<!-- ")
+	builder.WriteString(content.Content)
+	builder.WriteString(" -->")
+
+	return builder.String(), nil
+}
+
 func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath) (string, error) {
 	content, err := contentNode.Materialize()
 	if err != nil {
@@ -358,6 +368,8 @@ func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath)
 		return m.renderTableRow(content)
 	case RemoteType:
 		return m.renderRemoteContent(content)
+	case CommentType:
+		return m.renderComment(content)
 	}
 
 	return "", errors.New("unknown content node type")

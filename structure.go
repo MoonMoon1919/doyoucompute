@@ -246,6 +246,10 @@ func (s *Section) WriteRemoteContent(remote Remote) {
 	s.Content = append(s.Content, remote)
 }
 
+func (s *Section) WriteComment(value string) {
+	s.Content = append(s.Content, Comment(value))
+}
+
 // A document contains many sections
 type Document struct {
 	Name        string

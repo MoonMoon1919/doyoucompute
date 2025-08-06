@@ -17,6 +17,7 @@ const (
 	BlockQuoteType
 	ExecutableType
 	RemoteType
+	CommentType
 	ListType
 	TableType
 	ParagraphType
@@ -196,5 +197,18 @@ func (t TableRow) Materialize() (MaterializedContent, error) {
 		Metadata: map[string]interface{}{
 			"Items": t.Values,
 		},
+	}, nil
+}
+
+// MARK: Comment
+type Comment string
+
+func (c Comment) Type() ContentType { return CommentType }
+
+func (c Comment) Materialize() (MaterializedContent, error) {
+	return MaterializedContent{
+		Type:     c.Type(),
+		Content:  string(c),
+		Metadata: map[string]interface{}{},
 	}, nil
 }
