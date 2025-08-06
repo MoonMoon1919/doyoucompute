@@ -2,6 +2,7 @@ package doyoucompute
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -14,6 +15,45 @@ type Renderer[T any] interface {
 	// Render processes a node and converts it to the target format T.
 	// Returns an error if the rendering process fails.
 	Render(node Node) (T, error)
+}
+
+func getStringFromMetadata(metadata map[string]interface{}, key string) (string, error) {
+	val, exists := metadata[key]
+	if !exists {
+		return "", fmt.Errorf("missing metadata key: %s", key)
+	}
+	str, ok := val.(string)
+	if !ok {
+		return "", fmt.Errorf("metadata key %s is not a string", key)
+	}
+	return str, nil
+}
+
+func getStringsFromMetadata(metadata map[string]interface{}, key string) ([]string, error) {
+	val, exists := metadata[key]
+	if !exists {
+		return nil, fmt.Errorf("missing metadata key: %s", key)
+	}
+
+	// Handle []string
+	if strs, ok := val.([]string); ok {
+		return strs, nil
+	}
+
+	// Handle []interface{} and convert to []string
+	if interfaces, ok := val.([]interface{}); ok {
+		strs := make([]string, len(interfaces))
+		for i, item := range interfaces {
+			if str, ok := item.(string); ok {
+				strs[i] = str
+			} else {
+				return nil, fmt.Errorf("metadata key %s contains non-string element at index %d: %T", key, i, item)
+			}
+		}
+		return strs, nil
+	}
+
+	return nil, fmt.Errorf("metadata key %s expected []string, got %T", key, val)
 }
 
 // MARK: Tracking
@@ -270,7 +310,10 @@ func (m Markdown) renderHeader(content MaterializedContent, contextPath *Context
 }
 
 func (m Markdown) renderLink(content MaterializedContent) (string, error) {
-	url := content.Metadata["Url"].(string)
+	url, err := getStringFromMetadata(content.Metadata, "Url")
+	if err != nil {
+		return "", nil
+	}
 
 	var builder strings.Builder
 
@@ -308,7 +351,10 @@ func (m Markdown) renderBlockofCode(typeHint string, content string, builder *st
 }
 
 func (m Markdown) renderCodeBlock(content MaterializedContent) (string, error) {
-	shell := content.Metadata["BlockType"].(string)
+	shell, err := getStringFromMetadata(content.Metadata, "BlockType")
+	if err != nil {
+		return "", nil
+	}
 
 	var builder strings.Builder
 
@@ -327,7 +373,10 @@ func (m Markdown) renderBlockQuote(content MaterializedContent) (string, error) 
 }
 
 func (m Markdown) renderExecutable(content MaterializedContent) (string, error) {
-	shell := content.Metadata["Shell"].(string)
+	shell, err := getStringFromMetadata(content.Metadata, "Shell")
+	if err != nil {
+		return "", nil
+	}
 
 	var builder strings.Builder
 
@@ -339,7 +388,11 @@ func (m Markdown) renderExecutable(content MaterializedContent) (string, error) 
 func (m Markdown) renderTableRow(content MaterializedContent) (string, error) {
 	var builder strings.Builder
 
-	items := content.Metadata["Items"].([]string)
+	items, err := getStringsFromMetadata(content.Metadata, "Items")
+	if err != nil {
+		return "", err
+	}
+
 	joiner := strings.Join(items, " | ")
 
 	builder.WriteString("| ")
@@ -457,8 +510,15 @@ func (e Executioner) renderStructureNode(node Structurer, contextPath *ContextPa
 }
 
 func (e Executioner) renderExecutable(content MaterializedContent, contextPath *ContextPath) (CommandPlan, error) {
-	shell := content.Metadata["Shell"].(string)
-	args := content.Metadata["Command"].([]string)
+	shell, err := getStringFromMetadata(content.Metadata, "Shell")
+	if err != nil {
+		return CommandPlan{}, nil
+	}
+
+	args, err := getStringsFromMetadata(content.Metadata, "Command")
+	if err != nil {
+		return CommandPlan{}, err
+	}
 
 	return CommandPlan{
 		Shell:   shell,

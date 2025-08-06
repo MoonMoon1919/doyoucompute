@@ -259,14 +259,6 @@ func TestExecutableMaterialize(t *testing.T) {
 						t.Errorf("Did not find Shell")
 					}
 
-					if val, ok := m.Metadata["Executable"]; ok {
-						if val != true {
-							t.Errorf("Expected Executable to be true")
-						}
-					} else {
-						t.Errorf("Did not find Executable")
-					}
-
 					if val, ok := m.Metadata["Command"]; ok {
 						if !reflect.DeepEqual(val, tc.content) {
 							t.Errorf("Expected Command to be %s got %s", tc.content, val)

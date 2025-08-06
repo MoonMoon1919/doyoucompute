@@ -243,9 +243,8 @@ func (e Executable) Materialize() (MaterializedContent, error) {
 		Type:    e.Type(),
 		Content: strings.Join(e.Cmd, " "),
 		Metadata: map[string]interface{}{
-			"Shell":      e.Shell,
-			"Executable": true,
-			"Command":    e.Cmd,
+			"Shell":   e.Shell,
+			"Command": e.Cmd,
 		},
 	}, nil
 }
