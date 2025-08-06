@@ -92,6 +92,7 @@ type MaterializedContent struct {
 }
 
 // MARK: Header
+
 // Header represents a header element containing text content
 type Header struct {
 	// Content holds the text content of the header
@@ -102,7 +103,7 @@ type Header struct {
 func (h Header) Type() ContentType { return HeaderType }
 
 // Materialize converts the header into a MaterializedContent with its content
-// and an empty metadata map. Headers are processed as-is without transformation
+// Headers are processed as-is without transformation
 func (h Header) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:     h.Type(),
@@ -112,15 +113,15 @@ func (h Header) Materialize() (MaterializedContent, error) {
 }
 
 // MARK: Text
-// Text represents plain text content in documentation. It is defined as a string type
-// that implements content materialization behavior.
+
+// Text represents plain text content in documentation.
 type Text string
 
 // Type returns the ContentType for this text element.
 func (t Text) Type() ContentType { return TextType }
 
-// Materialize converts the text into a MaterializedContent with its string content
-// and an empty metadata map. Plain text is processed as-is without transformation.
+// Materialize converts the text into a MaterializedContent with its string content.
+// Plain text is processed as-is without transformation.
 func (t Text) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:     t.Type(),
@@ -130,6 +131,7 @@ func (t Text) Materialize() (MaterializedContent, error) {
 }
 
 // MARK: Link
+
 // Link represents a hyperlink element with display text and a target URL.
 type Link struct {
 	// Text holds the display text for the link
@@ -154,6 +156,7 @@ func (l Link) Materialize() (MaterializedContent, error) {
 }
 
 // MARK: Code
+
 // Code represents inline code content in documentation. It is defined as a string type
 // for short code snippets that appear within text (e.g., `variable` or `function()`).
 type Code string
@@ -164,7 +167,7 @@ func (c Code) Type() ContentType {
 }
 
 // Materialize converts the inline code into a MaterializedContent with its string content
-// and an empty metadata map. Inline code is processed as-is without transformation.
+// Inline code is processed as-is without transformation.
 func (c Code) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:     c.Type(),
@@ -175,15 +178,20 @@ func (c Code) Materialize() (MaterializedContent, error) {
 
 // MARK: Codeblock
 
-// A codeblock is a NON-EXECUTABLE block of code
-// Useful for examples/payloads etc
+// CodeBlock represents a non-executable code block used for displaying examples,
+// payloads, or other code snippets that should not be run during documentation generation.
 type CodeBlock struct {
+	// BlockType specifies the language or type of the code block (e.g., "json", "bash", "go")
 	BlockType string
-	Cmd       []string
+	// Cmd contains the lines or components of the code block content
+	Cmd []string
 }
 
+// Type returns the ContentType for this code block element.
 func (c CodeBlock) Type() ContentType { return CodeBlockType }
 
+// Materialize converts the code block into a MaterializedContent by joining
+// the Cmd slice with spaces as the content and storing the BlockType in metadata.
 func (c CodeBlock) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:    c.Type(),
@@ -195,10 +203,16 @@ func (c CodeBlock) Materialize() (MaterializedContent, error) {
 }
 
 // MARK: BlockQuote
+
+// BlockQuote represents quoted text content in documentation (e.g., > quoted text).
+// It is defined as a string type for text that should be rendered as a block quote.
 type BlockQuote string
 
+// Type returns the ContentType for this block quote element.
 func (b BlockQuote) Type() ContentType { return BlockQuoteType }
 
+// Materialize converts the block quote into a MaterializedContent with its string content
+// Block quotes are processed as-is without transformation.
 func (b BlockQuote) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:     b.Type(),
@@ -209,15 +223,21 @@ func (b BlockQuote) Materialize() (MaterializedContent, error) {
 
 // MARK: Executable
 
-// Script running
-// An executable code block
+// Executable represents a code block that can be executed while running documentation as a script.
+// This is the core component that enables "runnable documentation" by storing commands
+// that will be executed, while representing them as code blocks in rendered output.
 type Executable struct {
+	// Shell specifies the shell or interpreter to use for execution (e.g., "bash", "sh", "python")
 	Shell string
-	Cmd   []string
+	// Cmd contains the command and arguments to be executed
+	Cmd []string
 }
 
+// Type returns the ContentType for this executable element.
 func (e Executable) Type() ContentType { return ExecutableType }
 
+// Materialize converts the executable into a MaterializedContent with the joined command
+// as content and execution metadata including the shell, executable flag, and original command.
 func (e Executable) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:    e.Type(),
@@ -232,13 +252,18 @@ func (e Executable) Materialize() (MaterializedContent, error) {
 
 // MARK: Remote
 
-// Content Sources
-type Remote struct { // e.g., from local file in docs folder, from GitHub.. etc
+// Remote represents content that is sourced from external locations such as local files
+// in a docs folder, GitHub repositories, or other remote sources.
+type Remote struct {
+	// Reader provides access to the remote content data
 	Reader io.Reader
 }
 
+// Type returns the ContentType for this remote content element.
 func (r Remote) Type() ContentType { return RemoteType }
 
+// Materialize reads all content from the Reader and converts it into a MaterializedContent.
+// Returns an error if the content cannot be read from the remote source.
 func (r Remote) Materialize() (MaterializedContent, error) {
 	content, err := io.ReadAll(r.Reader)
 	if err != nil {
@@ -254,13 +279,17 @@ func (r Remote) Materialize() (MaterializedContent, error) {
 
 // MARK: TableRow
 
-// TableRow
+// TableRow represents a single row in a table with multiple column values.
 type TableRow struct {
+	// Values contains the content for each column in this table row
 	Values []string
 }
 
+// Type returns the ContentType for this table row element.
 func (t TableRow) Type() ContentType { return TableRowType }
 
+// Materialize converts the table row into a MaterializedContent with empty content
+// and the row values stored in metadata under the "Items" key.
 func (t TableRow) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:    t.Type(),
@@ -272,10 +301,17 @@ func (t TableRow) Materialize() (MaterializedContent, error) {
 }
 
 // MARK: Comment
+
+// Comment represents comment content in documentation that provides additional context
+// or notes. It is defined as a string type for text that may be rendered differently
+// from regular content.
 type Comment string
 
+// Type returns the ContentType for this comment element.
 func (c Comment) Type() ContentType { return CommentType }
 
+// Materialize converts the comment into a MaterializedContent with its string content
+// Comments are processed as-is without transformation.
 func (c Comment) Materialize() (MaterializedContent, error) {
 	return MaterializedContent{
 		Type:     c.Type(),
