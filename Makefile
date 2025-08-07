@@ -50,6 +50,20 @@ test/unit/cover: check-tools
 init-shell: check-goenv
 	@$(GOENVCMD) local $(GOVERSION)
 
+#
+.PHONY: gen-readme
+docs/readme:
+	@$(GOCMD) run docs/main.go render --doc-name 'DOYOUCOMPUTE' --path README.md
+
+docs/contrib:
+	@$(GOCMD) run docs/main.go render --doc-name 'Contributing' --path CONTRIBUTING.md
+
+template/pullrequest:
+	@$(GOCMD) run docs/main.go render --doc-name 'Pull request template' --path ./.github/PULL_REQUEST_TEMPLATE.md
+
+template/bugreport:
+	@$(GOCMD) run docs/main.go render --doc-name 'Bug Report' --path ./.github/ISSUE_TEMPLATE/bug_report.md
+
 # Show help
 .PHONY: help
 help:
