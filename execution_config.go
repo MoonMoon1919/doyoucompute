@@ -6,9 +6,6 @@ type ExecutionConfig struct {
 	// Timeout for command execution (0 means no timeout)
 	Timeout time.Duration
 
-	// WorkingDirectory to run commands in (empty means current dir)
-	WorkingDirectory string
-
 	// AllowedShells restricts which shells/interpreters can be used
 	AllowedShells []string
 
