@@ -24,33 +24,34 @@ go get github.com/MoonMoon1919/doyoucompute
 Create a simple document with executable commands:
 
 ```go
-package main
+package samples
 
 import "github.com/MoonMoon1919/doyoucompute"
 
-func main() {
-    doc, err := doyoucompute.NewDocument("My Project")
-    if err != nil {
-        return err
-    }
+func basics() {
+	doc, err := doyoucompute.NewDocument("My Project")
+	if err != nil {
+		panic(err)
+	}
 
-    // Add an introduction
-    doc.WriteIntro().
-        Text("Welcome to my project! ").
-        Text("Follow these steps to get started.")
+	// Add an introduction
+	doc.WriteIntro().
+		Text("Welcome to my project! ").
+		Text("Follow these steps to get started.")
 
-    // Add a setup section with executable commands
-    setup := doc.NewSection("Setup")
-    setup.WriteParagraph().
-        Text("First, install dependencies:")
+	// Add a setup section with executable commands
+	setup := doc.CreateSection("Setup")
+	setup.WriteParagraph().
+		Text("First, install dependencies:")
 
-    setup.WriteCodeBlock("bash", []string{"npm install"}, doyoucompute.Exec)
+	setup.WriteCodeBlock("bash", []string{"npm install"}, doyoucompute.Exec)
 
-    setup.WriteParagraph().
-        Text("Then start the development server:")
+	setup.WriteParagraph().
+		Text("Then start the development server:")
 
-    setup.WriteCodeBlock("bash", []string{"npm run dev"}, doyoucompute.Exec)
+	setup.WriteCodeBlock("bash", []string{"npm run dev"}, doyoucompute.Exec)
 }
+
 ```
 
 ### CLI Usage
@@ -58,39 +59,19 @@ func main() {
 Create a CLI wrapper for your documents:
 
 ```go
-package main
+package samples
 
-import (
-    "os"
-    "github.com/MoonMoon1919/doyoucompute"
-    "github.com/MoonMoon1919/doyoucompute/app"
-)
+import "github.com/MoonMoon1919/doyoucompute"
 
-func createReadmeDoc() doyoucompute.Document {
-	doc := doyoucompute.NewDocument("My Project")
+func envvars() {
+	setup := doyoucompute.NewSection("Setup")
 
-	// Add your content
-
-	return doc
+	setup.WriteExecutable(
+		"bash",
+		[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
+		[]string{"API_KEY"})
 }
 
-func main() {
-    // Create service with file repository and task runner
-    repo := doyoucompute.NewFileRepository()
-    runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
-    markdownRenderer := doyoucompute.NewMarkdownRenderer()
-    executionRenderer := doyoucompute.NewExecutionRenderer()
-
-    service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
-
-    // Create and run CLI app
-    app := app.New(service)
-    app.Register(createReadmeDoc())
-
-    if err := app.Run(os.Args); err != nil {
-        panic(err)
-    }
-}
 ```
 
 #### Available Commands
@@ -119,18 +100,36 @@ DOYOUCOMPUTE includes built-in security features to prevent dangerous command ex
 Customize execution behavior with security configurations:
 
 ```go
-// Default secure configuration
-config := doyoucompute.DefaultSecureConfig()
+package samples
 
-// Custom configuration
-config := doyoucompute.ExecutionConfig{
-	Timeout: 30 * time.Second,
-	AllowedShells: []string{"bash", "python3"},
-	BlockDangerousCommands: true,
+import (
+	"fmt"
+	"time"
+
+	"github.com/MoonMoon1919/doyoucompute"
+)
+
+func securityconfig() {
+	// Default secure configuration
+	config := doyoucompute.DefaultSecureConfig()
+
+	// or, a custom configuration!
+	config = doyoucompute.ExecutionConfig{
+		Timeout:                30 * time.Second,
+		AllowedShells:          []string{"bash", "python3"},
+		BlockDangerousCommands: true,
+	}
+
+	runner := doyoucompute.NewTaskRunner(config)
+	repo := doyoucompute.NewFileRepository()
+	markdownRenderer := doyoucompute.NewMarkdownRenderer()
+	execRenderer := doyoucompute.NewExecutionRenderer()
+	service := doyoucompute.NewService(repo, runner, markdownRenderer, execRenderer)
+
+	// do something with service, probably not print!
+	fmt.Printf("service: %v\n", service)
 }
 
-runner, err := doyoucompute.NewTaskRunner(config)
-service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
 ```
 
 ## Environment Variables
@@ -138,14 +137,22 @@ service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRend
 Commands can specify required environment variables:
 
 ```go
-// Command that requires API_KEY to be set
-setup := doyoucompute.NewSection("Setup")
+package samples
 
-setup.WriteExecutable(
-    "bash",
-	[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
-	[]string{"API_KEY"})
+import "github.com/MoonMoon1919/doyoucompute"
+
+func envvars() {
+	setup := doyoucompute.NewSection("Setup")
+
+	setup.WriteExecutable(
+		"bash",
+		[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
+		[]string{"API_KEY"})
+}
+
 ```
+
+The command will fail to run if the required environment variables are not set and report which are missing.
 
 ## Recommendations
 

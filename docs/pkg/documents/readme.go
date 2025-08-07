@@ -1,6 +1,10 @@
 package documents
 
-import "github.com/MoonMoon1919/doyoucompute"
+import (
+	"os"
+
+	"github.com/MoonMoon1919/doyoucompute"
+)
 
 func recommendations() doyoucompute.Section {
 	recommendationsSection := doyoucompute.NewSection("Recommendations")
@@ -12,42 +16,38 @@ func recommendations() doyoucompute.Section {
 	return recommendationsSection
 }
 
-func environmentVariables() doyoucompute.Section {
+func environmentVariables() (doyoucompute.Section, error) {
 	envSection := doyoucompute.NewSection("Environment Variables")
 	envSection.WriteIntro().
 		Text("Commands can specify required environment variables:")
 
-	envSection.WriteCodeBlock("go", []string{`// Command that requires API_KEY to be set
-setup := doyoucompute.NewSection("Setup")
+	sample, err := os.ReadFile("./docs/pkg/documents/samples/envvars.go")
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
 
-setup.WriteExecutable(
-    "bash",
-	[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
-	[]string{"API_KEY"})`}, doyoucompute.Static)
+	envSection.WriteCodeBlock("go", []string{string(sample)}, doyoucompute.Static)
 
-	return envSection
+	envSection.WriteParagraph().
+		Text("The command will fail to run if the required environment variables are not set and report which are missing.")
+
+	return envSection, nil
 }
 
-func configurationSecurity() doyoucompute.Section {
+func configurationSecurity() (doyoucompute.Section, error) {
 	configSection := doyoucompute.NewSection("Configuration")
 
 	configSection.WriteIntro().
 		Text("Customize execution behavior with security configurations:")
 
-	configSection.WriteCodeBlock("go", []string{`// Default secure configuration
-config := doyoucompute.DefaultSecureConfig()
+	sample, err := os.ReadFile("./docs/pkg/documents/samples/securityconfig.go")
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
 
-// Custom configuration
-config := doyoucompute.ExecutionConfig{
-	Timeout: 30 * time.Second,
-	AllowedShells: []string{"bash", "python3"},
-	BlockDangerousCommands: true,
-}
+	configSection.WriteCodeBlock("go", []string{string(sample)}, doyoucompute.Static)
 
-runner, err := doyoucompute.NewTaskRunner(config)
-service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)`}, doyoucompute.Static)
-
-	return configSection
+	return configSection, nil
 }
 
 func securitySection() doyoucompute.Section {
@@ -66,45 +66,18 @@ func securitySection() doyoucompute.Section {
 	return securitySection
 }
 
-func cliSection() doyoucompute.Section {
+func cliSection() (doyoucompute.Section, error) {
 	cliSection := doyoucompute.NewSection("CLI Usage")
 
 	cliSection.WriteIntro().
 		Text("Create a CLI wrapper for your documents:")
 
-	cliSection.WriteCodeBlock("go", []string{`package main
+	sample, err := os.ReadFile("./docs/pkg/documents/samples/envvars.go")
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
 
-import (
-    "os"
-    "github.com/MoonMoon1919/doyoucompute"
-    "github.com/MoonMoon1919/doyoucompute/app"
-)
-
-func createReadmeDoc() doyoucompute.Document {
-	doc := doyoucompute.NewDocument("My Project")
-
-	// Add your content
-
-	return doc
-}
-
-func main() {
-    // Create service with file repository and task runner
-    repo := doyoucompute.NewFileRepository()
-    runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
-    markdownRenderer := doyoucompute.NewMarkdownRenderer()
-    executionRenderer := doyoucompute.NewExecutionRenderer()
-
-    service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
-
-    // Create and run CLI app
-    app := app.New(service)
-    app.Register(createReadmeDoc())
-
-    if err := app.Run(os.Args); err != nil {
-        panic(err)
-    }
-}`}, doyoucompute.Static)
+	cliSection.WriteCodeBlock("go", []string{string(sample)}, doyoucompute.Static)
 
 	availableCommandsSection := cliSection.CreateSection("Available Commands")
 	commandsTable := availableCommandsSection.CreateTable([]string{"Command", "Description", "Example"})
@@ -135,54 +108,45 @@ func main() {
 		"./cli list",
 	)
 
-	return cliSection
+	return cliSection, nil
 }
 
-func basicUsageSection() doyoucompute.Section {
+func basicUsageSection() (doyoucompute.Section, error) {
 	basicUsageSection := doyoucompute.NewSection("Basic Usage")
 	basicUsageSection.WriteIntro().
 		Text("Create a simple document with executable commands:")
 
-	basicUsageSection.WriteCodeBlock("go", []string{`package main
+	sample, err := os.ReadFile("./docs/pkg/documents/samples/basics.go")
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
 
-import "github.com/MoonMoon1919/doyoucompute"
+	basicUsageSection.WriteCodeBlock("go", []string{string(sample)}, doyoucompute.Static)
 
-func main() {
-    doc, err := doyoucompute.NewDocument("My Project")
-    if err != nil {
-        return err
-    }
-
-    // Add an introduction
-    doc.WriteIntro().
-        Text("Welcome to my project! ").
-        Text("Follow these steps to get started.")
-
-    // Add a setup section with executable commands
-    setup := doc.NewSection("Setup")
-    setup.WriteParagraph().
-        Text("First, install dependencies:")
-
-    setup.WriteCodeBlock("bash", []string{"npm install"}, doyoucompute.Exec)
-
-    setup.WriteParagraph().
-        Text("Then start the development server:")
-
-    setup.WriteCodeBlock("bash", []string{"npm run dev"}, doyoucompute.Exec)
-}`}, doyoucompute.Static)
-
-	return basicUsageSection
+	return basicUsageSection, nil
 }
 
-func quickstartSection() doyoucompute.Section {
+func quickstartSection() (doyoucompute.Section, error) {
 	quickStartSection := doyoucompute.NewSection("Quick Start")
 
 	installationSection := quickStartSection.CreateSection("Installation")
 	installationSection.WriteCodeBlock("bash", []string{"go get github.com/MoonMoon1919/doyoucompute"}, doyoucompute.Static)
-	quickStartSection.AddSection(basicUsageSection())
-	quickStartSection.AddSection(cliSection())
 
-	return quickStartSection
+	basicUsage, err := basicUsageSection()
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
+
+	quickStartSection.AddSection(basicUsage)
+
+	cliSection, err := cliSection()
+	if err != nil {
+		return doyoucompute.Section{}, err
+	}
+
+	quickStartSection.AddSection(cliSection)
+
+	return quickStartSection, nil
 }
 
 func Readme() (doyoucompute.Document, error) {
@@ -206,15 +170,30 @@ func Readme() (doyoucompute.Document, error) {
 	featureList.Append("⚡ Section-based execution for targeted testing")
 
 	// Quick Start
-	document.AddSection(quickstartSection())
+	quickStart, err := quickstartSection()
+	if err != nil {
+		return doyoucompute.Document{}, err
+	}
+
+	document.AddSection(quickStart)
 
 	// Security
 	securitySection := securitySection()
-	securitySection.AddSection(configurationSecurity())
+
+	config, err := configurationSecurity()
+	if err != nil {
+		return doyoucompute.Document{}, err
+	}
+
+	securitySection.AddSection(config)
 	document.AddSection(securitySection)
 
 	// Env vars
-	document.AddSection(environmentVariables())
+	envvars, err := environmentVariables()
+	if err != nil {
+		return doyoucompute.Document{}, err
+	}
+	document.AddSection(envvars)
 
 	// Recs
 	document.AddSection(recommendations())
