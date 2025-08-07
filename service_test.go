@@ -2,7 +2,6 @@ package doyoucompute
 
 import (
 	"errors"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -34,14 +33,10 @@ func (f *FakeFileRepo) Save(path string, content string) error {
 }
 
 type MockTaskRunner struct {
-	expectations map[string]TaskResult
 }
 
 func (m MockTaskRunner) Run(plan CommandPlan) TaskResult {
 	key := strings.Join(plan.Args, " ")
-	if result, exists := m.expectations[key]; exists {
-		return result
-	}
 
 	return TaskResult{
 		SectionName: plan.Context.Name,
@@ -51,10 +46,10 @@ func (m MockTaskRunner) Run(plan CommandPlan) TaskResult {
 	}
 }
 
-func newService(taskRunnerExpectations map[string]TaskResult) Service {
+func newService() Service {
 	return NewService(
 		NewFakeFileRepo(),
-		MockTaskRunner{expectations: taskRunnerExpectations},
+		MockTaskRunner{},
 		NewMarkdownRenderer(),
 		NewExecutionRenderer(),
 	)
@@ -107,11 +102,10 @@ func checkErrors(expectedErrorMsg string, err error, t *testing.T) {
 func testServiceOperation[T any](
 	t *testing.T,
 	operation func(*Service) (T, error),
-	taskRunnerResults map[string]TaskResult,
 	errorMessage string,
 	comparisonFunc func(T, *Service, *testing.T),
 ) {
-	svc := newService(taskRunnerResults)
+	svc := newService()
 
 	res, err := operation(&svc)
 
@@ -148,7 +142,6 @@ func TestRenderFile(t *testing.T) {
 
 					return "", err
 				},
-				map[string]TaskResult{},
 				tc.errorMessage,
 				func(res string, svc *Service, t *testing.T) {
 					comparisonResult, err := svc.CompareFile(&tc.document, tc.outpath)
@@ -194,7 +187,6 @@ func TestCompareFile(t *testing.T) {
 
 					return s.CompareFile(&tc.document, tc.outpath)
 				},
-				map[string]TaskResult{},
 				tc.errorMessage,
 				func(cr ComparisonResult, s *Service, t *testing.T) {
 					if cr.Matches != tc.matches {
@@ -245,7 +237,6 @@ func TestPlanScriptExecution(t *testing.T) {
 				func(s *Service) ([]CommandPlan, error) {
 					return s.PlanScriptExecution(&tc.document, ALL_SECTIONS)
 				},
-				map[string]TaskResult{},
 				tc.errorMessage,
 				func(cp []CommandPlan, s *Service, t *testing.T) {
 					for idx, expected := range tc.expected {
@@ -278,20 +269,20 @@ func TestExecuteScript(t *testing.T) {
 	tests := []struct {
 		name              string
 		document          Document
-		taskRunnerResults map[string]TaskResult
+		taskRunnerResults []TaskResult
 		errorMessage      string
 	}{
 		{
 			name:     "Passing",
 			document: newDocument(),
-			taskRunnerResults: map[string]TaskResult{
-				"echo hello world": {
+			taskRunnerResults: []TaskResult{
+				{
 					SectionName: "INTRO",
 					Command:     "echo hello world",
 					Status:      COMPLETED,
 					Error:       nil,
 				},
-				"go get": {
+				{
 					SectionName: "Quick Start",
 					Command:     "go get",
 					Status:      COMPLETED,
@@ -309,25 +300,14 @@ func TestExecuteScript(t *testing.T) {
 				func(s *Service) ([]TaskResult, error) {
 					return s.ExecuteScript(&tc.document, ALL_SECTIONS)
 				},
-				tc.taskRunnerResults,
 				tc.errorMessage,
 				func(tr []TaskResult, s *Service, t *testing.T) {
-					var expected []TaskResult
-					for _, result := range tc.taskRunnerResults {
-						expected = append(expected, result)
+					for idx, result := range tr {
+						expected := tc.taskRunnerResults[idx]
+						if expected != result {
+							t.Errorf("Expected TaskResults %v, got %v", expected, result)
+						}
 					}
-
-					if !reflect.DeepEqual(expected, tr) {
-						t.Errorf("Expected TaskResults %v, got %v", expected, tr)
-
-					}
-
-					// for idx, result := range tr {
-					// 	expected := expected[idx]
-
-					// 	if expected != result {
-					// 	}
-					// }
 				},
 			)
 		})
