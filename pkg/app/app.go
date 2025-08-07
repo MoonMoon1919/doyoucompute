@@ -35,7 +35,6 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "path",
-						Value: "README.md",
 						Usage: "The path to which you want to write the document",
 					},
 					&cli.StringFlag{
@@ -69,7 +68,6 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "path",
-						Value: "README.md",
 						Usage: "The path to which you want to write the document",
 					},
 					&cli.StringFlag{
