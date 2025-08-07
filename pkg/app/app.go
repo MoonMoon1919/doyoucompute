@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/MoonMoon1919/doyoucompute"
@@ -48,13 +49,17 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 
 					document, err := findDoc(name)
 					if err != nil {
-						return err
+						return fmt.Errorf("❌ Document '%s' not found. Use 'list' command to see available documents.", name)
 					}
+
+					fmt.Printf("📄 Rendering document: %s\n", name)
+					fmt.Printf("📁 Output path: %s\n", outpath)
 
 					if err := service.RenderFile(&document, outpath); err != nil {
-						return err
+						return fmt.Errorf("❌ Failed to render document: %w", err)
 					}
 
+					fmt.Printf("✅ Successfully rendered '%s' to '%s'\n", name, outpath)
 					return nil
 				},
 			},
@@ -78,18 +83,29 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 
 					document, err := findDoc(name)
 					if err != nil {
-						return err
+						return fmt.Errorf("❌ Document '%s' not found. Use 'list' command to see available documents.", name)
 					}
 
-					if result, err := service.CompareFile(&document, outpath); err != nil {
-						return err
-					} else {
+					fmt.Printf("🔍 Comparing document: %s\n", name)
+					fmt.Printf("📁 Against file: %s\n", outpath)
 
-						if !result.Matches {
-							return fmt.Errorf("Results do not match, file hash %s, content hash %s", result.FileHash, result.DocumentHash)
+					result, err := service.CompareFile(&document, outpath)
+					if err != nil {
+						if os.IsNotExist(err) {
+							return fmt.Errorf("❌ File '%s' does not exist.\n💡 Tip: Run 'render --doc-name %s --path %s' to create it.", outpath, name, outpath)
 						}
+						return fmt.Errorf("❌ Failed to compare file: %w", err)
 					}
 
+					if !result.Matches {
+						fmt.Printf("❌ Content mismatch detected:\n")
+						fmt.Printf("   📄 Document hash: %s\n", result.DocumentHash)
+						fmt.Printf("   📁 File hash:     %s\n", result.FileHash)
+						fmt.Printf("💡 Tip: Run 'render --doc-name %s --path %s' to update the file\n", name, outpath)
+						return fmt.Errorf("Files don't match")
+					}
+
+					fmt.Printf("✅ File matches document content perfectly!\n")
 					return nil
 				},
 			},
@@ -179,16 +195,46 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 
 					document, err := findDoc(name)
 					if err != nil {
-						return err
+						return fmt.Errorf("❌ Document '%s' not found. Use 'list' command to see available documents.", name)
 					}
 
-					if results, err := service.PlanScriptExecution(&document, section); err != nil {
-						return err
-					} else {
-						for _, result := range results {
-							log.Printf("[Section: %s] - Command: '%s'", result.Context.Name, strings.Join(result.Args, " "))
-						}
+					fmt.Printf("📋 Creating execution plan for: %s\n", name)
+					if section != doyoucompute.ALL_SECTIONS {
+						fmt.Printf("🎯 Section filter: %s\n", section)
 					}
+					fmt.Println()
+
+					results, err := service.PlanScriptExecution(&document, section)
+					if err != nil {
+						return fmt.Errorf("❌ Failed to create execution plan: %w", err)
+					}
+
+					if len(results) == 0 {
+						fmt.Printf("⚠️  No executable commands found")
+						if section != doyoucompute.ALL_SECTIONS {
+							fmt.Printf(" in section '%s'", section)
+						}
+						fmt.Printf("\n💡 Tip: Add executable code blocks to your document to make it runnable\n")
+						return nil
+					}
+
+					fmt.Printf("📊 Found %d executable command(s):\n\n", len(results))
+
+					for i, result := range results {
+						fmt.Printf("%d. 📍 Section: %s\n", i+1, result.Context.Name)
+						fmt.Printf("   🐚 Shell: %s\n", result.Shell)
+						fmt.Printf("   ⚡ Command: %s\n", strings.Join(result.Args, " "))
+						if len(result.Environment) > 0 {
+							fmt.Printf("   🌍 Required env vars: %v\n", result.Environment)
+						}
+						fmt.Println()
+					}
+
+					fmt.Printf("💡 Tip: Run 'run --doc-name %s", name)
+					if section != doyoucompute.ALL_SECTIONS {
+						fmt.Printf(" --section %s", section)
+					}
+					fmt.Printf("' to execute these commands\n")
 
 					return nil
 				},
@@ -198,14 +244,18 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 				Usage: "List all available docs",
 				Action: func(ctx context.Context, c *cli.Command) error {
 					if len(documents) == 0 {
-						return errors.New("no documents found")
+						fmt.Printf("⚠️  No documents registered\n")
+						fmt.Printf("💡 Tip: Register documents before running the CLI\n")
+						return nil
 					}
+
+					fmt.Printf("📚 Available documents (%d):\n\n", len(documents))
 
 					for docName := range documents {
-						fmt.Print(docName)
-						fmt.Print("\n")
+						fmt.Printf("📄 %s\n", docName)
 					}
 
+					fmt.Printf("\n💡 Tip: Use 'plan --doc-name <name>' to see what commands would be run as a script\n")
 					return nil
 				},
 			},
