@@ -6,6 +6,9 @@ on:
       - '**/*.md'
       - 'LICENSE'
       - ".gitignore"
+      - "example/"
+      - "testdocs/"
+      - "docs/"
   push:
     branches:
       - 'main'
@@ -13,6 +16,9 @@ on:
       - '**/*.md'
       - 'LICENSE'
       - ".gitignore"
+      - "example/"
+      - "testdocs/"
+      - "docs/"
 
 jobs:
   test:
