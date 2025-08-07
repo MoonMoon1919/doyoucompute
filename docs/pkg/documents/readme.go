@@ -2,6 +2,70 @@ package documents
 
 import "github.com/MoonMoon1919/doyoucompute"
 
+func recommendations() doyoucompute.Section {
+	recommendationsSection := doyoucompute.NewSection("Recommendations")
+	practicesList := recommendationsSection.CreateList(doyoucompute.BULLET)
+	practicesList.Append("🔄 Run 'compare' in CI to ensure docs stay current")
+	practicesList.Append("🧪 Use 'plan' to preview commands before execution")
+	practicesList.Append("📂 Organize related commands into logical sections")
+
+	return recommendationsSection
+}
+
+func environmentVariables() doyoucompute.Section {
+	envSection := doyoucompute.NewSection("Environment Variables")
+	envSection.WriteIntro().
+		Text("Commands can specify required environment variables:")
+
+	envSection.WriteCodeBlock("go", []string{`// Command that requires API_KEY to be set
+setup := doyoucompute.NewSection("Setup")
+
+setup.WriteExecutable(
+    "bash",
+	[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
+	[]string{"API_KEY"})`}, doyoucompute.Static)
+
+	return envSection
+}
+
+func configurationSecurity() doyoucompute.Section {
+	configSection := doyoucompute.NewSection("Configuration")
+
+	configSection.WriteIntro().
+		Text("Customize execution behavior with security configurations:")
+
+	configSection.WriteCodeBlock("go", []string{`// Default secure configuration
+config := doyoucompute.DefaultSecureConfig()
+
+// Custom configuration
+config := doyoucompute.ExecutionConfig{
+	Timeout: 30 * time.Second,
+	AllowedShells: []string{"bash", "python3"},
+	BlockDangerousCommands: true,
+}
+
+runner, err := doyoucompute.NewTaskRunner(config)
+service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)`}, doyoucompute.Static)
+
+	return configSection
+}
+
+func securitySection() doyoucompute.Section {
+	securitySection := doyoucompute.NewSection("Security Features")
+
+	securitySection.WriteIntro().
+		Text("DOYOUCOMPUTE includes built-in security features to prevent dangerous command execution:")
+
+	securityList := securitySection.CreateList(doyoucompute.BULLET)
+	securityList.Append("🛡️ Dangerous command blocking (rm -rf, sudo, etc.)")
+	securityList.Append("⏱️ Configurable execution timeouts")
+	securityList.Append("🐚 Shell allow-listing")
+	securityList.Append("🔒 Command validation and sanitization")
+	securityList.Append("🌍 Environment variable validation")
+
+	return securitySection
+}
+
 func cliSection() doyoucompute.Section {
 	cliSection := doyoucompute.NewSection("CLI Usage")
 
@@ -27,7 +91,7 @@ func createReadmeDoc() doyoucompute.Document {
 func main() {
     // Create service with file repository and task runner
     repo := doyoucompute.NewFileRepository()
-    runner := doyoucompute.NewTaskRunner()
+    runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
     markdownRenderer := doyoucompute.NewMarkdownRenderer()
     executionRenderer := doyoucompute.NewExecutionRenderer()
 
@@ -84,7 +148,10 @@ func basicUsageSection() doyoucompute.Section {
 import "github.com/MoonMoon1919/doyoucompute"
 
 func main() {
-    doc := doyoucompute.NewDocument("My Project")
+    doc, err := doyoucompute.NewDocument("My Project")
+    if err != nil {
+        return err
+    }
 
     // Add an introduction
     doc.WriteIntro().
@@ -93,12 +160,12 @@ func main() {
 
     // Add a setup section with executable commands
     setup := doc.NewSection("Setup")
-    setup.NewParagraph().
+    setup.WriteParagraph().
         Text("First, install dependencies:")
 
     setup.WriteCodeBlock("bash", []string{"npm install"}, doyoucompute.Exec)
 
-    setup.NewParagraph().
+    setup.WriteParagraph().
         Text("Then start the development server:")
 
     setup.WriteCodeBlock("bash", []string{"npm run dev"}, doyoucompute.Exec)
@@ -140,6 +207,17 @@ func Readme() (doyoucompute.Document, error) {
 
 	// Quick Start
 	document.AddSection(quickstartSection())
+
+	// Security
+	securitySection := securitySection()
+	securitySection.AddSection(configurationSecurity())
+	document.AddSection(securitySection)
+
+	// Env vars
+	document.AddSection(environmentVariables())
+
+	// Recs
+	document.AddSection(recommendations())
 
 	// Contributing
 	contributing := document.CreateSection("Contributing")

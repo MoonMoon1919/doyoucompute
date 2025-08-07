@@ -29,7 +29,10 @@ package main
 import "github.com/MoonMoon1919/doyoucompute"
 
 func main() {
-    doc := doyoucompute.NewDocument("My Project")
+    doc, err := doyoucompute.NewDocument("My Project")
+    if err != nil {
+        return err
+    }
 
     // Add an introduction
     doc.WriteIntro().
@@ -38,12 +41,12 @@ func main() {
 
     // Add a setup section with executable commands
     setup := doc.NewSection("Setup")
-    setup.NewParagraph().
+    setup.WriteParagraph().
         Text("First, install dependencies:")
 
     setup.WriteCodeBlock("bash", []string{"npm install"}, doyoucompute.Exec)
 
-    setup.NewParagraph().
+    setup.WriteParagraph().
         Text("Then start the development server:")
 
     setup.WriteCodeBlock("bash", []string{"npm run dev"}, doyoucompute.Exec)
@@ -74,7 +77,7 @@ func createReadmeDoc() doyoucompute.Document {
 func main() {
     // Create service with file repository and task runner
     repo := doyoucompute.NewFileRepository()
-    runner := doyoucompute.NewTaskRunner()
+    runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
     markdownRenderer := doyoucompute.NewMarkdownRenderer()
     executionRenderer := doyoucompute.NewExecutionRenderer()
 
@@ -99,6 +102,57 @@ func main() {
 | run | Execute all commands in document | ./cli run --doc-name=setup |
 | plan | Show execution plan without running | ./cli plan --doc-name=setup --section="Database Setup" |
 | list | List all available documents | ./cli list |
+
+## Security Features
+
+DOYOUCOMPUTE includes built-in security features to prevent dangerous command execution:
+
+- 🛡️ Dangerous command blocking (rm -rf, sudo, etc.)
+- ⏱️ Configurable execution timeouts
+- 🐚 Shell allow-listing
+- 🔒 Command validation and sanitization
+- 🌍 Environment variable validation
+
+
+### Configuration
+
+Customize execution behavior with security configurations:
+
+```go
+// Default secure configuration
+config := doyoucompute.DefaultSecureConfig()
+
+// Custom configuration
+config := doyoucompute.ExecutionConfig{
+	Timeout: 30 * time.Second,
+	AllowedShells: []string{"bash", "python3"},
+	BlockDangerousCommands: true,
+}
+
+runner, err := doyoucompute.NewTaskRunner(config)
+service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
+```
+
+## Environment Variables
+
+Commands can specify required environment variables:
+
+```go
+// Command that requires API_KEY to be set
+setup := doyoucompute.NewSection("Setup")
+
+setup.WriteExecutable(
+    "bash",
+	[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
+	[]string{"API_KEY"})
+```
+
+## Recommendations
+
+- 🔄 Run 'compare' in CI to ensure docs stay current
+- 🧪 Use 'plan' to preview commands before execution
+- 📂 Organize related commands into logical sections
+
 
 ## Contributing
 
