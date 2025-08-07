@@ -1,7 +1,9 @@
 package doyoucompute
 
 import (
+	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -40,11 +42,31 @@ type Runner interface {
 
 // TaskRunner implements the Runner interface for executing commands locally
 // using the operating system's command execution facilities.
-type TaskRunner struct{}
+type TaskRunner struct {
+	config ExecutionConfig
+}
 
 // NewTaskRunner creates a new TaskRunner instance for local command execution.
-func NewTaskRunner() TaskRunner {
-	return TaskRunner{}
+func NewTaskRunner(config ExecutionConfig) TaskRunner {
+	return TaskRunner{
+		config: config,
+	}
+}
+
+func validateEnvironment(requiredEnvVars []string) error {
+	var missing []string
+
+	for _, envVar := range requiredEnvVars {
+		if os.Getenv(envVar) == "" {
+			missing = append(missing, envVar)
+		}
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("required environment variables not set: %v", missing)
+	}
+
+	return nil
 }
 
 // Run executes a command plan locally using exec.Command, streaming output to
@@ -55,17 +77,38 @@ func (t TaskRunner) Run(plan CommandPlan) TaskResult {
 		Command:     strings.Join(plan.Args, " "),
 	}
 
+	if err := ValidateCommandPlan(plan, t.config); err != nil {
+		result.Error = fmt.Errorf("security validation failed: %w", err)
+		result.Status = FAILED
+		return result
+	}
+
+	// Check required environment variables
+	if err := validateEnvironment(plan.Environment); err != nil {
+		result.Error = fmt.Errorf("environment validation failed: %w", err)
+		result.Status = FAILED
+		return result
+	}
+
 	if len(plan.Args) == 0 {
 		result.Error = errors.New("no command specified")
 		result.Status = FAILED
 		return result
 	}
 
-	cmd := exec.Command(plan.Args[0], plan.Args[1:]...)
+	ctx := context.Background()
+	if t.config.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, t.config.Timeout)
+		defer cancel()
+	}
+
+	cmd := exec.CommandContext(ctx, plan.Args[0], plan.Args[1:]...)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
+	log.Printf("[Section: %s] - Running command: '%s'", plan.Context.Name, strings.Join(plan.Args, " "))
 	if err := cmd.Run(); err != nil {
 		result.Error = err
 		result.Status = FAILED
@@ -83,8 +126,6 @@ func RunExecutionPlan(plans []CommandPlan, runner Runner) []TaskResult {
 	results := make([]TaskResult, len(plans))
 
 	for idx, commandPlan := range plans {
-		log.Printf("[Section: %s] - Running command: '%s'", commandPlan.Context.Name, strings.Join(commandPlan.Args, " "))
-
 		results[idx] = runner.Run(commandPlan)
 	}
 

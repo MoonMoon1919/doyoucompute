@@ -13,7 +13,7 @@ func main() {
 	repo := doyoucompute.NewFileRepository()
 	fileRenderer := doyoucompute.NewMarkdownRenderer()
 	execRenderer := doyoucompute.NewExecutionRenderer()
-	runner := doyoucompute.NewTaskRunner()
+	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
 	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
 
 	// Docs to register

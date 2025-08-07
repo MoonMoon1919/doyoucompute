@@ -477,6 +477,8 @@ type CommandPlan struct {
 	Args []string
 	// Context provides information about which section this command originated from
 	Context SectionInfo
+	// Environment variables that must be set for the command to be executed
+	Environment []string
 }
 
 // Executioner implements the Renderer interface to extract executable commands
@@ -520,10 +522,16 @@ func (e Executioner) renderExecutable(content MaterializedContent, contextPath *
 		return CommandPlan{}, err
 	}
 
+	envvars, err := getStringsFromMetadata(content.Metadata, "Environment")
+	if err != nil {
+		return CommandPlan{}, err
+	}
+
 	return CommandPlan{
-		Shell:   shell,
-		Args:    args,
-		Context: contextPath.Current(),
+		Shell:       shell,
+		Args:        args,
+		Context:     contextPath.Current(),
+		Environment: envvars,
 	}, nil
 }
 

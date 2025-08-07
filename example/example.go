@@ -86,6 +86,9 @@ func builderRoute() doyoucompute.Document {
 	section.WriteCodeBlock("sh", []string{"echo", "hello", "world"}, doyoucompute.Exec)
 	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, doyoucompute.Static)
 
+	// section.WriteCodeBlock("sh", []string{"dd", "of=/dev/null"}, doyoucompute.Exec)
+	// section.WriteCodeBlock("sh", []string{"sudo", "su"}, doyoucompute.Exec)
+
 	// Table
 	table := section.CreateTable(
 		[]string{"my", "cool", "table"},
@@ -106,7 +109,7 @@ func main() {
 	repo := doyoucompute.NewFileRepository()
 	fileRenderer := doyoucompute.NewMarkdownRenderer()
 	execRenderer := doyoucompute.NewExecutionRenderer()
-	runner := doyoucompute.NewTaskRunner()
+	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
 	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
 
 	// manualDoc := manualRoute()

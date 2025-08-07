@@ -51,7 +51,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		{
 			name: "Successful command execution",
 			plan: CommandPlan{
-				Args: []string{"echo", "hello"},
+				Shell: "sh",
+				Args:  []string{"echo", "hello"},
 				Context: SectionInfo{
 					Name: "TestSection",
 				},
@@ -63,7 +64,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		{
 			name: "Failed command execution",
 			plan: CommandPlan{
-				Args: []string{"nonexistentcommand", "arg1"},
+				Shell: "sh",
+				Args:  []string{"nonexistentcommand", "arg1"},
 				Context: SectionInfo{
 					Name: "TestSection",
 				},
@@ -75,7 +77,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		{
 			name: "Command with multiple args",
 			plan: CommandPlan{
-				Args: []string{"echo", "hello", "world"},
+				Shell: "sh",
+				Args:  []string{"echo", "hello", "world"},
 				Context: SectionInfo{
 					Name: "MultiArgSection",
 				},
@@ -87,7 +90,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		{
 			name: "Empty command args",
 			plan: CommandPlan{
-				Args: []string{},
+				Shell: "sh",
+				Args:  []string{},
 				Context: SectionInfo{
 					Name: "EmptySection",
 				},
@@ -99,7 +103,8 @@ func TestTaskRunner_Run(t *testing.T) {
 		{
 			name: "Command that returns non-zero exit code",
 			plan: CommandPlan{
-				Args: []string{"sh", "-c", "exit 1"},
+				Shell: "sh",
+				Args:  []string{"sh", "-c", "exit 1"},
 				Context: SectionInfo{
 					Name: "FailSection",
 				},
@@ -112,7 +117,7 @@ func TestTaskRunner_Run(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			runner := NewTaskRunner()
+			runner := NewTaskRunner(DefaultSecureConfig())
 
 			testTaskRunnerOperation(
 				t,
@@ -339,7 +344,7 @@ func TestNewTaskRunner(t *testing.T) {
 			testTaskRunnerOperation(
 				t,
 				func() (TaskRunner, error) {
-					return NewTaskRunner(), nil
+					return NewTaskRunner(DefaultSecureConfig()), nil
 				},
 				tc.errorMessage,
 				func(result TaskRunner, t *testing.T) {

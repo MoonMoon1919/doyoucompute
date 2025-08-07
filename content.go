@@ -231,6 +231,8 @@ type Executable struct {
 	Shell string
 	// Cmd contains the command and arguments to be executed
 	Cmd []string
+	// Environment variables that must be set for the command to be run
+	Environment []string
 }
 
 // Type returns the ContentType for this executable element.
@@ -243,8 +245,9 @@ func (e Executable) Materialize() (MaterializedContent, error) {
 		Type:    e.Type(),
 		Content: strings.Join(e.Cmd, " "),
 		Metadata: map[string]interface{}{
-			"Shell":   e.Shell,
-			"Command": e.Cmd,
+			"Shell":       e.Shell,
+			"Command":     e.Cmd,
+			"Environment": e.Environment,
 		},
 	}, nil
 }

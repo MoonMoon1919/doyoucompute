@@ -116,9 +116,45 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return err
 					}
 
-					if _, err := service.ExecuteScript(&document, section); err != nil {
-						return err
+					results, err := service.ExecuteScript(&document, section)
+					if err != nil {
+						return fmt.Errorf("Failed to execute script: %w", err)
 					}
+
+					// Provide feedback on results
+					var failedCount int
+
+					for _, result := range results {
+						if result.Status == doyoucompute.FAILED {
+							failedCount++
+
+							// Extract missing env vars from error message if it's an env validation error
+							if strings.Contains(result.Error.Error(), "environment validation failed") {
+								fmt.Printf("❌ Command failed in section '%s': %s\n", result.SectionName, result.Command)
+								fmt.Printf("   Error: %v\n", result.Error)
+
+								// Give helpful suggestion
+								if strings.Contains(result.Error.Error(), "required environment variables not set") {
+									fmt.Printf("   💡 Tip: Set the required environment variables and try again\n")
+								}
+							} else if strings.Contains(result.Error.Error(), "security validation failed") {
+								fmt.Printf("❌ Command blocked for security in section '%s': %s\n", result.SectionName, result.Command)
+								fmt.Printf("   Error: %v\n", result.Error)
+							} else {
+								fmt.Printf("❌ Command failed in section '%s': %s\n", result.SectionName, result.Command)
+								fmt.Printf("   Error: %v\n", result.Error)
+							}
+							fmt.Println()
+						} else {
+							fmt.Printf("✅ Completed: %s (section: %s)\n", result.Command, result.SectionName)
+						}
+					}
+
+					if failedCount > 0 {
+						return fmt.Errorf("%d out of %d commands failed", failedCount, len(results))
+					}
+
+					fmt.Printf("🎉 All %d commands completed successfully!\n", len(results))
 
 					return nil
 				},

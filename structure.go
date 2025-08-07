@@ -306,8 +306,9 @@ func (s *Section) WriteCodeBlock(blockType string, cmd []string, executable Code
 
 	if executable == Exec {
 		newContent = Executable{
-			Shell: blockType,
-			Cmd:   cmd,
+			Shell:       blockType,
+			Cmd:         cmd,
+			Environment: nil,
 		}
 	} else {
 		newContent = CodeBlock{
@@ -317,6 +318,16 @@ func (s *Section) WriteCodeBlock(blockType string, cmd []string, executable Code
 	}
 
 	s.Content = append(s.Content, newContent)
+}
+
+func (s *Section) WriteExecutable(shell string, cmd []string, env []string) {
+	executable := Executable{
+		Shell:       shell,
+		Cmd:         cmd,
+		Environment: env,
+	}
+
+	s.Content = append(s.Content, executable)
 }
 
 // WriteBlockQuote adds a block quote with the specified content to the section.
