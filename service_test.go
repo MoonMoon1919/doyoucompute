@@ -2,6 +2,7 @@ package doyoucompute
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -316,13 +317,17 @@ func TestExecuteScript(t *testing.T) {
 						expected = append(expected, result)
 					}
 
-					for idx, result := range tr {
-						expected := expected[idx]
+					if !reflect.DeepEqual(expected, tr) {
+						t.Errorf("Expected TaskResults %v, got %v", expected, tr)
 
-						if expected != result {
-							t.Errorf("Expected TaskResult %v, got %v", expected, result)
-						}
 					}
+
+					// for idx, result := range tr {
+					// 	expected := expected[idx]
+
+					// 	if expected != result {
+					// 	}
+					// }
 				},
 			)
 		})
