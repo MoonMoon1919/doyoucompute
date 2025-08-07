@@ -155,5 +155,11 @@ func Readme() (doyoucompute.Document, error) {
 		Link("LICENSE", "./LICENSE").
 		Text("for details.")
 
+	// Disclaimer
+	disclaimerSection := document.CreateSection("Disclaimers")
+	disclaimerSection.WriteIntro().
+		Text("This work does not represent the interests or technologies of any employer, past or present.").
+		Text("It is a personal project only.")
+
 	return document, nil
 }

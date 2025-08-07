@@ -107,3 +107,7 @@ See [CONTRIBUTING](./CONTRIBUTING.md) for details.
 ## License
 
 MIT License - see [LICENSE](./LICENSE) for details.
+
+## Disclaimers
+
+This work does not represent the interests or technologies of any employer, past or present. It is a personal project only.
