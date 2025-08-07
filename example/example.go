@@ -86,6 +86,8 @@ func builderRoute() doyoucompute.Document {
 	section.WriteCodeBlock("sh", []string{"echo", "hello", "world"}, doyoucompute.Exec)
 	section.WriteCodeBlock("json", []string{`{"key": "value"}`}, doyoucompute.Static)
 
+	section.WriteExecutable("sh", []string{"echo", "$WORD"}, []string{"WORD"})
+
 	// section.WriteCodeBlock("sh", []string{"dd", "of=/dev/null"}, doyoucompute.Exec)
 	// section.WriteCodeBlock("sh", []string{"sudo", "su"}, doyoucompute.Exec)
 

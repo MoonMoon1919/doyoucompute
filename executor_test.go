@@ -104,7 +104,7 @@ func TestTaskRunner_Run(t *testing.T) {
 			name: "Command that returns non-zero exit code",
 			plan: CommandPlan{
 				Shell: "sh",
-				Args:  []string{"sh", "-c", "exit 1"},
+				Args:  []string{"exit 1"},
 				Context: SectionInfo{
 					Name: "FailSection",
 				},

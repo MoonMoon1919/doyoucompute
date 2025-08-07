@@ -103,7 +103,14 @@ func (t TaskRunner) Run(plan CommandPlan) TaskResult {
 		defer cancel()
 	}
 
-	cmd := exec.CommandContext(ctx, plan.Args[0], plan.Args[1:]...)
+	var cmd *exec.Cmd
+
+	if plan.Shell == "sh" || plan.Shell == "bash" {
+		// We currently only support variable expansion for bash/sh
+		cmd = exec.CommandContext(ctx, plan.Shell, "-c", strings.Join(plan.Args, " "))
+	} else {
+		cmd = exec.CommandContext(ctx, plan.Args[0], plan.Args[1:]...)
+	}
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
