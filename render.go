@@ -119,19 +119,20 @@ func NewMarkdownRenderer() Markdown {
 }
 
 func (m Markdown) writeHeader(builder *strings.Builder, content string, level int) {
-	builder.WriteString(strings.Repeat("#", level))
-	builder.WriteString(" ")
-	builder.WriteString(content)
-	builder.WriteString("\n\n")
+	fmt.Fprintf(builder, "%s %s\n\n", strings.Repeat("#", level), content)
 }
 
 func (m Markdown) renderChildren(children []Node, contextPath *ContextPath) ([]string, error) {
+	if len(children) == 0 {
+		return nil, nil
+	}
+
 	results := make([]string, len(children))
 
 	for idx, leaf := range children {
 		leafContent, err := m.renderWithTracking(leaf, contextPath)
 		if err != nil {
-			return []string{}, err
+			return nil, err
 		}
 
 		results[idx] = leafContent
@@ -315,16 +316,7 @@ func (m Markdown) renderLink(content MaterializedContent) (string, error) {
 		return "", nil
 	}
 
-	var builder strings.Builder
-
-	builder.WriteString("[")
-	builder.WriteString(content.Content)
-	builder.WriteString("]")
-	builder.WriteString("(")
-	builder.WriteString(url)
-	builder.WriteString(")")
-
-	return builder.String(), nil
+	return fmt.Sprintf("[%s](%s)", content.Content, url), nil
 }
 
 func (m Markdown) renderText(content MaterializedContent) (string, error) {
@@ -332,13 +324,7 @@ func (m Markdown) renderText(content MaterializedContent) (string, error) {
 }
 
 func (m Markdown) renderCode(content MaterializedContent) (string, error) {
-	var builder strings.Builder
-
-	builder.WriteString("`")
-	builder.WriteString(content.Content)
-	builder.WriteString("`")
-
-	return builder.String(), nil
+	return fmt.Sprintf("`%s`", content.Content), nil
 }
 
 func (m Markdown) renderBlockofCode(typeHint string, content string, builder *strings.Builder) {
@@ -364,12 +350,7 @@ func (m Markdown) renderCodeBlock(content MaterializedContent) (string, error) {
 }
 
 func (m Markdown) renderBlockQuote(content MaterializedContent) (string, error) {
-	var builder strings.Builder
-
-	builder.WriteString("> ")
-	builder.WriteString(content.Content)
-
-	return builder.String(), nil
+	return fmt.Sprintf("> %s", content.Content), nil
 }
 
 func (m Markdown) renderExecutable(content MaterializedContent) (string, error) {
@@ -410,13 +391,7 @@ func (m Markdown) renderRemoteContent(content MaterializedContent) (string, erro
 }
 
 func (m Markdown) renderComment(content MaterializedContent) (string, error) {
-	var builder strings.Builder
-
-	builder.WriteString("<!-- ")
-	builder.WriteString(content.Content)
-	builder.WriteString(" -->")
-
-	return builder.String(), nil
+	return fmt.Sprintf("<!-- %s -->", content.Content), nil
 }
 
 func (m Markdown) renderContent(contentNode Contenter, contextPath *ContextPath) (string, error) {
