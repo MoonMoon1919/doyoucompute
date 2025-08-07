@@ -151,8 +151,11 @@ func writingDocs() doyoucompute.Section {
 	return docsSection
 }
 
-func Contributing() doyoucompute.Document {
-	doc := doyoucompute.NewDocument("Contributing")
+func Contributing() (doyoucompute.Document, error) {
+	doc, err := doyoucompute.NewDocument("Contributing")
+	if err != nil {
+		return doyoucompute.Document{}, err
+	}
 
 	doc.AddSection(gettingStarted())
 
@@ -167,5 +170,5 @@ func Contributing() doyoucompute.Document {
 		Text("By contributing, you agree that your contributions will be licensed under the project's").
 		Link("MIT License.", "./LICENSE")
 
-	return doc
+	return doc, nil
 }

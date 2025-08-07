@@ -2,6 +2,7 @@ package doyoucompute
 
 import (
 	"errors"
+	"strings"
 )
 
 // MARK: Frontmatter
@@ -217,6 +218,13 @@ func (s Section) Type() ContentType { return SectionType }
 // Identifier returns the section name as its identifier.
 func (s Section) Identifier() string { return s.Name }
 
+func (s Section) Valid() error {
+	if s.Name == "" {
+		return errors.New("section name cannot be empty")
+	}
+	return nil
+}
+
 // AddIntro prepends a paragraph to the beginning of the section content.
 func (s *Section) AddIntro(content *Paragraph) {
 	s.Content = append([]Node{content}, s.Content...)
@@ -340,11 +348,17 @@ type Document struct {
 }
 
 // NewDocument creates a new Document with the specified name and empty content.
-func NewDocument(name string) Document {
-	return Document{
-		Name:    name,
-		Content: make([]Node, 0),
+func NewDocument(name string) (Document, error) {
+	nameTrimmed := strings.TrimSpace(name)
+
+	if nameTrimmed == "" {
+		return Document{}, errors.New("document name cannot be empty")
 	}
+
+	return Document{
+		Name:    nameTrimmed,
+		Content: make([]Node, 0),
+	}, nil
 }
 
 // Type returns the ContentType for this document element.
@@ -355,6 +369,13 @@ func (d Document) Children() []Node { return d.Content }
 
 // Identifier returns the document name as its identifier.
 func (d Document) Identifier() string { return d.Name }
+
+func (d Document) Valid() error {
+	if d.Name == "" {
+		return errors.New("document name cannot be empty")
+	}
+	return nil
+}
 
 // AddIntro prepends a paragraph to the beginning of the document content.
 func (d *Document) AddIntro(content *Paragraph) {

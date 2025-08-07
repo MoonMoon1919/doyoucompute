@@ -118,8 +118,12 @@ func quickstartSection() doyoucompute.Section {
 	return quickStartSection
 }
 
-func Readme() doyoucompute.Document {
-	document := doyoucompute.NewDocument("DOYOUCOMPUTE")
+func Readme() (doyoucompute.Document, error) {
+	document, err := doyoucompute.NewDocument("DOYOUCOMPUTE")
+	if err != nil {
+		return doyoucompute.Document{}, err
+	}
+
 	document.WriteIntro().
 		Text("A lightweight framework for creating runnable documentation.").
 		Text("Write your documentation once, then render it as markdown or execute it as a script.").
@@ -151,5 +155,5 @@ func Readme() doyoucompute.Document {
 		Link("LICENSE", "./LICENSE").
 		Text("for details.")
 
-	return document
+	return document, nil
 }

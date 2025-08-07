@@ -2,8 +2,11 @@ package documents
 
 import "github.com/MoonMoon1919/doyoucompute"
 
-func BugReport() doyoucompute.Document {
-	document := doyoucompute.NewDocument("Bug Report")
+func BugReport() (doyoucompute.Document, error) {
+	document, err := doyoucompute.NewDocument("Bug Report")
+	if err != nil {
+		return doyoucompute.Document{}, nil
+	}
 
 	document.AddFrontmatter(*doyoucompute.NewFrontmatter(map[string]interface{}{
 		"name":      "Bug report",
@@ -34,5 +37,5 @@ func BugReport() doyoucompute.Document {
 	errorMessages := document.CreateSection("Error Messages")
 	errorMessages.WriteComment("Add any relevant error messages/logs here.")
 
-	return document
+	return document, nil
 }

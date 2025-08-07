@@ -73,7 +73,7 @@ func builderRoute() doyoucompute.Document {
 		panic(err)
 	}
 
-	document := doyoucompute.NewDocument("MY DOC")
+	document, _ := doyoucompute.NewDocument("MY DOC")
 	document.WriteIntro().Text("I am an introduction paragraph")
 
 	// Build the section

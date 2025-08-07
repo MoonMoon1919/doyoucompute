@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/MoonMoon1919/doyoucompute"
@@ -18,10 +19,29 @@ func main() {
 	// Docs to register
 	app := app.New(&svc)
 
-	app.Register(documents.Readme())
-	app.Register(documents.Contributing())
-	app.Register(documents.BugReport())
-	app.Register(documents.PullRequest())
+	readMe, err := documents.Readme()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Register(readMe)
+
+	contrib, err := documents.Contributing()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Register(contrib)
+
+	bugReport, err := documents.BugReport()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Register(bugReport)
+
+	prTemplate, err := documents.PullRequest()
+	if err != nil {
+		log.Fatal(err)
+	}
+	app.Register(prTemplate)
 
 	app.Run(os.Args)
 }

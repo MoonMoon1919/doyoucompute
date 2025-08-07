@@ -1491,7 +1491,7 @@ func TestDocumentAddIntro(t *testing.T) {
 			testOperation(
 				t,
 				func() *Document {
-					document := NewDocument("test")
+					document, _ := NewDocument("test")
 
 					for idx := range tc.existingItems {
 						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
@@ -1556,7 +1556,7 @@ func TestDocumentWriteIntro(t *testing.T) {
 			testOperation(
 				t,
 				func() *Document {
-					document := NewDocument("test")
+					document, _ := NewDocument("test")
 
 					for idx := range tc.existingItems {
 						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
@@ -1620,7 +1620,7 @@ func TestDocumentAddSection(t *testing.T) {
 			testOperation(
 				t,
 				func() *Document {
-					document := NewDocument("test")
+					document, _ := NewDocument("test")
 
 					for idx := range tc.existingItems {
 						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
@@ -1680,7 +1680,7 @@ func TestDocumentCreateSection(t *testing.T) {
 			testOperation(
 				t,
 				func() *Document {
-					document := NewDocument("test")
+					document, _ := NewDocument("test")
 
 					for idx := range tc.existingItems {
 						document.AddSection(NewSection(fmt.Sprintf("Section %d", idx)))
@@ -1726,7 +1726,7 @@ func TestDocumentAddFrontmatter(t *testing.T) {
 			testOperation(
 				t,
 				func() *Document {
-					document := NewDocument("test")
+					document, _ := NewDocument("test")
 
 					return &document
 				},
