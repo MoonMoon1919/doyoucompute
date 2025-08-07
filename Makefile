@@ -59,7 +59,7 @@ docs/contrib:
 	@$(GOCMD) run docs/main.go render --doc-name 'Contributing' --path CONTRIBUTING.md
 
 template/pullrequest:
-	@$(GOCMD) run docs/main.go render --doc-name 'Pull request template' --path ./.github/PULL_REQUEST_TEMPLATE.md
+	@$(GOCMD) run docs/main.go render --doc-name 'Pull Request' --path ./.github/PULL_REQUEST_TEMPLATE.md
 
 template/bugreport:
 	@$(GOCMD) run docs/main.go render --doc-name 'Bug Report' --path ./.github/ISSUE_TEMPLATE/bug_report.md
