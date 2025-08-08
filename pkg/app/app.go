@@ -103,7 +103,7 @@ func cliBuilder(cliName string, service *doyoucompute.Service, documents map[str
 						return fmt.Errorf("Files don't match")
 					}
 
-					fmt.Printf("✅ File matches document content perfectly!\n")
+					fmt.Printf("✅ File matches document content!\n")
 					return nil
 				},
 			},

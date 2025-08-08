@@ -25,21 +25,16 @@ jobs:
 
       - name: Check README
         working-directory: ./docs
-        run: |
-          go run main.go compare --doc-name 'DOYOUCOMPUTE' --path ../README.md
+        run: make validate/readme
 
       - name: Check bug report issue template
         working-directory: ./docs
-        run: |
-          go run main.go compare --doc-name 'Bug Report' --path ../.github/ISSUE_TEMPLATE/bug_report.md
+        run: make validate/bugreport
 
       - name: Check PR template
         working-directory: ./docs
-        run: |
-          go run main.go compare --doc-name 'Pull Request' --path ../.github/PULL_REQUEST_TEMPLATE.md
+        run: make validate/pullrequest
 
       - name: Check Contributing
         working-directory: ./docs
-        run: |
-          go run main.go compare --doc-name 'Contributing' --path ../CONTRIBUTING.md
-
+        run: make validate/contrib
