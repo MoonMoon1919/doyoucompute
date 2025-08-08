@@ -24,17 +24,13 @@ jobs:
           go-version-file: go.mod
 
       - name: Check README
-        working-directory: ./docs
         run: make validate/readme
 
       - name: Check bug report issue template
-        working-directory: ./docs
         run: make validate/bugreport
 
       - name: Check PR template
-        working-directory: ./docs
         run: make validate/pullrequest
 
       - name: Check Contributing
-        working-directory: ./docs
         run: make validate/contrib
