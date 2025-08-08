@@ -72,7 +72,7 @@ func cliSection() (doyoucompute.Section, error) {
 	cliSection.WriteIntro().
 		Text("Create a CLI wrapper for your documents:")
 
-	sample, err := os.ReadFile("./docs/pkg/documents/samples/envvars.go")
+	sample, err := os.ReadFile("./docs/pkg/documents/samples/app.go")
 	if err != nil {
 		return doyoucompute.Section{}, err
 	}

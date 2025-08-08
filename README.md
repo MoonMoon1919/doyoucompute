@@ -61,15 +61,35 @@ Create a CLI wrapper for your documents:
 ```go
 package samples
 
-import "github.com/MoonMoon1919/doyoucompute"
+import (
+	"os"
 
-func envvars() {
-	setup := doyoucompute.NewSection("Setup")
+	"github.com/MoonMoon1919/doyoucompute"
+	"github.com/MoonMoon1919/doyoucompute/pkg/app"
+)
 
-	setup.WriteExecutable(
-		"bash",
-		[]string{"curl", "-H", "Authorization: Bearer $API_KEY", "api.example.com"},
-		[]string{"API_KEY"})
+func main() {
+	// Create service with file repository and task runner
+	repo := doyoucompute.NewFileRepository()
+	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
+	markdownRenderer := doyoucompute.NewMarkdownRenderer()
+	executionRenderer := doyoucompute.NewExecutionRenderer()
+
+	service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
+
+	// Create and run CLI app
+	app := app.New(&service)
+
+	doc, err := doyoucompute.NewDocument("My Project")
+	if err != nil {
+		panic(err)
+	}
+
+	app.Register(doc)
+
+	if err := app.Run(os.Args); err != nil {
+		panic(err)
+	}
 }
 
 ```
