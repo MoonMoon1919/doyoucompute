@@ -2,6 +2,7 @@ package doyoucompute
 
 import (
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -310,6 +311,75 @@ func TestExecuteScript(t *testing.T) {
 					}
 				},
 			)
+		})
+	}
+}
+
+func TestDefaultService(t *testing.T) {
+	type expected struct {
+		repository        Repository
+		runner            Runner
+		fileRenderer      Renderer[string]
+		executionRenderer Renderer[[]CommandPlan]
+	}
+
+	tests := []struct {
+		name         string
+		opts         []OptionsServiceFunc
+		errorMessage string
+		expected     expected
+	}{
+		{
+			name: "default",
+			opts: []OptionsServiceFunc{},
+			expected: expected{
+				repository:        FileRepository{},
+				runner:            TaskRunner{config: DefaultSecureConfig()},
+				fileRenderer:      Markdown{},
+				executionRenderer: Executioner{},
+			},
+			errorMessage: "",
+		},
+		{
+			name: "overrides",
+			opts: []OptionsServiceFunc{
+				WithRepository(NewFakeFileRepo()),
+				WithTaskRunner(&MockRunner{}),
+			},
+			expected: expected{
+				repository:        &FakeFileRepo{},
+				runner:            &MockRunner{},
+				fileRenderer:      Markdown{},
+				executionRenderer: Executioner{},
+			},
+			errorMessage: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			svc, err := DefaultService(tc.opts...)
+
+			checkErrors(tc.errorMessage, err, t)
+			if tc.errorMessage != "" {
+				return
+			}
+
+			if reflect.TypeOf(svc.repository) != reflect.TypeOf(tc.expected.repository) {
+				t.Errorf("Expected repository to be %v, got %v", reflect.TypeOf(tc.expected.repository), reflect.TypeOf(svc.repository))
+			}
+
+			if reflect.TypeOf(svc.taskRunner) != reflect.TypeOf(tc.expected.runner) {
+				t.Errorf("Expected repository to be %v, got %v", reflect.TypeOf(tc.expected.runner), reflect.TypeOf(svc.taskRunner))
+			}
+
+			if reflect.TypeOf(svc.fileRenderer) != reflect.TypeOf(tc.expected.fileRenderer) {
+				t.Errorf("Expected repository to be %v, got %v", reflect.TypeOf(tc.expected.fileRenderer), reflect.TypeOf(svc.fileRenderer))
+			}
+
+			if reflect.TypeOf(svc.executionRenderer) != reflect.TypeOf(tc.expected.executionRenderer) {
+				t.Errorf("Expected repository to be %v, got %v", reflect.TypeOf(tc.expected.executionRenderer), reflect.TypeOf(svc.executionRenderer))
+			}
 		})
 	}
 }

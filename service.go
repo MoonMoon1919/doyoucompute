@@ -41,6 +41,60 @@ func NewService(repo Repository, runner Runner, fileRenderer Renderer[string], e
 	}
 }
 
+type OptionsServiceFunc func(c *Service) error
+
+func WithRepository(repo Repository) OptionsServiceFunc {
+	return func(s *Service) error {
+		s.repository = repo
+
+		return nil
+	}
+}
+
+func WithTaskRunner(runner Runner) OptionsServiceFunc {
+	return func(s *Service) error {
+		s.taskRunner = runner
+
+		return nil
+	}
+}
+
+func WithFileRenderer(renderer Renderer[string]) OptionsServiceFunc {
+	return func(s *Service) error {
+		s.fileRenderer = renderer
+
+		return nil
+	}
+}
+
+func WithExecutionRenderer(renderer Renderer[[]CommandPlan]) OptionsServiceFunc {
+	return func(s *Service) error {
+		s.executionRenderer = renderer
+
+		return nil
+	}
+}
+
+// DefaultService creates a service instance with FileRepository,
+// MarkdownRender, ExecutionRenderer, and TaskRunner with DefaultSecureConfig
+// It takes in any number of OptionsServiceFunc to configure the options of the service
+func DefaultService(opts ...OptionsServiceFunc) (*Service, error) {
+	svc := Service{
+		repository:        NewFileRepository(),
+		taskRunner:        NewTaskRunner(DefaultSecureConfig()),
+		fileRenderer:      NewMarkdownRenderer(),
+		executionRenderer: NewExecutionRenderer(),
+	}
+
+	for _, opt := range opts {
+		if err := opt(&svc); err != nil {
+			return nil, err
+		}
+	}
+
+	return &svc, nil
+}
+
 // RenderFile generates the final content for a document and saves it to the specified output path.
 // Returns an error if rendering fails or the file cannot be saved.
 func (s Service) RenderFile(document *Document, outpath string) error {
