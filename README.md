@@ -69,16 +69,13 @@ import (
 )
 
 func main() {
-	// Create service with file repository and task runner
-	repo := doyoucompute.NewFileRepository()
-	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
-	markdownRenderer := doyoucompute.NewMarkdownRenderer()
-	executionRenderer := doyoucompute.NewExecutionRenderer()
-
-	service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
+	service, err := doyoucompute.DefaultService()
+	if err != nil {
+		panic(err)
+	}
 
 	// Create and run CLI app
-	app := app.New(&service)
+	app := app.New(service)
 
 	doc, err := doyoucompute.NewDocument("My Project")
 	if err != nil {
@@ -140,11 +137,12 @@ func securityconfig() {
 		BlockDangerousCommands: true,
 	}
 
-	runner := doyoucompute.NewTaskRunner(config)
-	repo := doyoucompute.NewFileRepository()
-	markdownRenderer := doyoucompute.NewMarkdownRenderer()
-	execRenderer := doyoucompute.NewExecutionRenderer()
-	service := doyoucompute.NewService(repo, runner, markdownRenderer, execRenderer)
+	service, err := doyoucompute.DefaultService(
+		doyoucompute.WithTaskRunner(doyoucompute.NewTaskRunner(config)),
+	)
+	if err != nil {
+		panic(err)
+	}
 
 	// do something with service, probably not print!
 	fmt.Printf("service: %v\n", service)

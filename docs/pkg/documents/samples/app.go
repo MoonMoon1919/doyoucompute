@@ -8,16 +8,13 @@ import (
 )
 
 func main() {
-	// Create service with file repository and task runner
-	repo := doyoucompute.NewFileRepository()
-	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
-	markdownRenderer := doyoucompute.NewMarkdownRenderer()
-	executionRenderer := doyoucompute.NewExecutionRenderer()
-
-	service := doyoucompute.NewService(repo, runner, markdownRenderer, executionRenderer)
+	service, err := doyoucompute.DefaultService()
+	if err != nil {
+		panic(err)
+	}
 
 	// Create and run CLI app
-	app := app.New(&service)
+	app := app.New(service)
 
 	doc, err := doyoucompute.NewDocument("My Project")
 	if err != nil {

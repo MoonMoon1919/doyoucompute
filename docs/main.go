@@ -10,14 +10,13 @@ import (
 )
 
 func main() {
-	repo := doyoucompute.NewFileRepository()
-	fileRenderer := doyoucompute.NewMarkdownRenderer()
-	execRenderer := doyoucompute.NewExecutionRenderer()
-	runner := doyoucompute.NewTaskRunner(doyoucompute.DefaultSecureConfig())
-	svc := doyoucompute.NewService(repo, runner, fileRenderer, execRenderer)
+	svc, err := doyoucompute.DefaultService()
+	if err != nil {
+		panic(err)
+	}
 
 	// Docs to register
-	app := app.New(&svc)
+	app := app.New(svc)
 
 	readMe, err := documents.Readme()
 	if err != nil {

@@ -18,11 +18,12 @@ func securityconfig() {
 		BlockDangerousCommands: true,
 	}
 
-	runner := doyoucompute.NewTaskRunner(config)
-	repo := doyoucompute.NewFileRepository()
-	markdownRenderer := doyoucompute.NewMarkdownRenderer()
-	execRenderer := doyoucompute.NewExecutionRenderer()
-	service := doyoucompute.NewService(repo, runner, markdownRenderer, execRenderer)
+	service, err := doyoucompute.DefaultService(
+		doyoucompute.WithTaskRunner(doyoucompute.NewTaskRunner(config)),
+	)
+	if err != nil {
+		panic(err)
+	}
 
 	// do something with service, probably not print!
 	fmt.Printf("service: %v\n", service)
