@@ -277,6 +277,33 @@ func New(service *doyoucompute.Service) *app {
 	}
 }
 
+func WithService(svc *doyoucompute.Service) doyoucompute.OptionBuilder[app] {
+	return func(a *app) (doyoucompute.Finalizer[app], error) {
+		a.service = svc
+
+		return nil, nil
+	}
+}
+
+func Default(opts ...doyoucompute.OptionBuilder[app]) *app {
+	svc, err := doyoucompute.DefaultService()
+	if err != nil {
+		panic(err)
+	}
+
+	props := app{
+		documents: map[string]doyoucompute.Document{},
+		service:   svc,
+	}
+
+	err = doyoucompute.ApplyOptions(&props, opts...)
+	if err != nil {
+		panic(err)
+	}
+
+	return &props
+}
+
 // Register adds a document to the application's registry, making it available
 // for CLI operations. The document is indexed by its Name field.
 func (a *app) Register(document doyoucompute.Document) {
