@@ -271,7 +271,7 @@ func (s *Section) WriteParagraph() *Paragraph {
 func (s *Section) AddTable(headers []string, rows []TableRow) {
 	table := Table{Headers: headers, Items: rows}
 
-	s.Content = append(s.Content, table)
+	s.Content = append(s.Content, &table)
 }
 
 // CreateTable creates a new table with the given headers and returns it for editing.
